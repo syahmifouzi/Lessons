@@ -1,3 +1,15 @@
 1. Setting Arduino IDE for ESP8266-01 package
   - http://arduino.esp8266.com/stable/package_esp8266com_index.json
 
+2. Contains most of the schematic and programming for adxl345
+ - https://learn.adafruit.com/adxl345-digital-accelerometer/programming
+
+3. Very in depth explanation of adxl345
+ - https://morf.lv/mems-part-1-guide-to-using-accelerometer-adxl345
+
+4. Some notes about adxl345 project
+ - http://www.himix.lt/arduino/arduino-and-servo-control-using-accelerometer-adxl345/
+
+5. Also some notes about adxl345 in depth
+ - http://codeyoung.blogspot.com/2009/11/adxl345-accelerometer-breakout-board.html
+
