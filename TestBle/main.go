@@ -13,11 +13,11 @@ import (
 func main() {
 	// Set up options
 	options := serial.OpenOptions{
-		PortName:        "COM9", // in my PC, it is outgoing hc-05 'dev B'
+		PortName:        "COM13", // in my PC, it is outgoing hc-05 'dev B'
 		BaudRate:        9600,
 		DataBits:        8,
 		StopBits:        1,
-		MinimumReadSize: 2,
+		MinimumReadSize: 8,
 	}
 
 	// Open the port
@@ -26,27 +26,62 @@ func main() {
 		log.Fatalln("serial.Open:", err)
 	}
 
+	// err = port.Flush()
+	// if err != nil {
+	// 	log.Fatalln("port.Flush:", err)
+	// }
+
 	// Write 2 bytes to the port
-	b := []byte{'m', 0x64}
+	b := []byte{'l', 0}
 	_, err = port.Write(b)
 	if err != nil {
 		log.Fatalln("port.Write:", err)
 	}
 
-	buf := make([]byte, 128)
-	n, err := port.Read(buf)
+	b2 := []byte{'r', 0}
+	_, err = port.Write(b2)
 	if err != nil {
-		log.Fatal(err)
+		log.Fatalln("port.Write:", err)
 	}
-	log.Println("port.Read:", buf[:n], n, buf[0:1], buf[1:2])
 
-	s1 := string(buf[1:2])
-
-	// log.Println(int(s1[0]))
-
-	if int(s1[0]) == 0x64 {
-		log.Println("i got 100")
+	b3 := []byte{'q', 0}
+	_, err = port.Write(b3)
+	if err != nil {
+		log.Fatalln("port.Write:", err)
 	}
+
+	nQuit := 0
+
+	for nQuit != 8 {
+		buf := make([]byte, 128)
+		n, err := port.Read(buf)
+		if err != nil {
+			log.Fatal(err)
+		}
+		log.Println("port.Read:", buf[:n])
+		nQuit = nQuit + n
+	}
+
+	// log.Println("port.Read:", buf[:n], n, buf[0:1])
+
+	// s1 := string(buf[7:8])
+
+	// // log.Println(int(s1[0]))
+
+	// if int(s1[0]) == 0x71 { // 0x71 == 133 == 'q'
+	// 	log.Println("i quit")
+	// }
+
+	// done := false
+
+	// for !done {
+	// 	log.Println("not done", s1)
+	// 	time.Sleep(2 * time.Second)
+	// 	if s1 == "q" {
+	// 		log.Println("i quit")
+	// 		done = true
+	// 	}
+	// }
 
 	// Make sure to close it later
 	defer port.Close()

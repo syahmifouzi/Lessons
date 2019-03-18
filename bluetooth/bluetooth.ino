@@ -62,12 +62,64 @@ void loop()
     
 
   //robot.forward(255);           //Move robot forward
+
+  runCalibration();
   
-  Serial.print("BTN : ");         
-  Serial.println(input.isBTN_press());  //print condition of button 1 = press, 0 = release
+//  Serial.print("BTN : ");         
+//  Serial.println(input.isBTN_press());  //print condition of button 1 = press, 0 = release
+//  
+//  Serial.print("JMP : ");
+//  Serial.println(input.isJMP_connected()); //print condition of jumper 1 = close, 0 = open
+
+  Serial.println("Threshold 0");
+  Serial.print(input.getIntData(THRESSHOLD, 0));  
+  Serial.print("\t"); 
+  Serial.print(input.getIntData(HIGH_VAL, 0));
+  Serial.print("\t");
+  Serial.println(input.getIntData(LOW_VAL, 0));
+
+  Serial.println("Threshold 1");
+  Serial.print(input.getIntData(THRESSHOLD, 1));  
+  Serial.print("\t"); 
+  Serial.print(input.getIntData(HIGH_VAL, 1));
+  Serial.print("\t");
+  Serial.println(input.getIntData(LOW_VAL, 1));
+
+  Serial.println("Threshold 2");
+  Serial.print(input.getIntData(THRESSHOLD, 2));  
+  Serial.print("\t"); 
+  Serial.print(input.getIntData(HIGH_VAL, 2));
+  Serial.print("\t");
+  Serial.println(input.getIntData(LOW_VAL, 2));
+
+  Serial.println("Threshold 3");
+  Serial.print(input.getIntData(THRESSHOLD, 3));  
+  Serial.print("\t"); 
+  Serial.print(input.getIntData(HIGH_VAL, 3));
+  Serial.print("\t");
+  Serial.println(input.getIntData(LOW_VAL, 3));
+
+  Serial.println("Threshold 4");
+  Serial.print(input.getIntData(THRESSHOLD, 4));  
+  Serial.print("\t"); 
+  Serial.print(input.getIntData(HIGH_VAL, 4));
+  Serial.print("\t");
+  Serial.println(input.getIntData(LOW_VAL, 4));
+
+  Serial.println("Threshold 5");
+  Serial.print(input.getIntData(THRESSHOLD, 5));  
+  Serial.print("\t"); 
+  Serial.print(input.getIntData(HIGH_VAL, 5));
+  Serial.print("\t");
+  Serial.println(input.getIntData(LOW_VAL, 5));
+
+  Serial.println("Threshold 6");
+  Serial.print(input.getIntData(THRESSHOLD, 6));  
+  Serial.print("\t"); 
+  Serial.print(input.getIntData(HIGH_VAL, 6));
+  Serial.print("\t");
+  Serial.println(input.getIntData(LOW_VAL, 6));
   
-  Serial.print("JMP : ");
-  Serial.println(input.isJMP_connected()); //print condition of jumper 1 = close, 0 = open
   
   Serial.println("Sensor");
   Serial.print(input.LS_RAW(0));      
@@ -84,11 +136,19 @@ void loop()
   Serial.print("\t");
   Serial.println(input.LS_RAW(6));    //print IR analog sensor value (IR0 - IR6)
   
+//  BUZZ_ON();                //Turn on buzzer
+//  delay(1000);
+//  BUZZ_OFF();               //Turn off buzzer
+  delay(1000);
+
+}
+
+void runCalibration() {
+  while (!input.isBTN_press());
+  input.calibration(60);
   BUZZ_ON();                //Turn on buzzer
   delay(1000);
-  BUZZ_OFF();               //Turn off buzzer
-  delay(10000);
-
+  BUZZ_OFF(); 
 }
 
 // initialize Serial
