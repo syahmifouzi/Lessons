@@ -45,36 +45,76 @@ void setup()
 
 void loop()
 {
+  // for testing serial com
+  int leftValue = 0;
+  int rightValue = 0;
+  bool done = false;
   String LeftMotor = "";
   String RightMotor = "";
   char command = 'n';
-  bool done = false;
 
-  while (!done) {
-    while(Serial.available()) {
-      char character = Serial.read();
-      if (command == 'l' && character != 'r') {
-        LeftMotor.concat(character);
-      } else if (command == 'r' && character != 'q') {
-        RightMotor.concat(character);
-      } else {
-        command = character;
-      }
-  
-      if (command == 'q') {
-        done = true;
-      }
+while(!done){
+  while(Serial.available()) {
+    char character = Serial.read();
+//    Serial.println("character");
+//    Serial.println(character);
+//    Serial.println("command");
+//    Serial.println(command);
+    if (command == 'l' && character != 'r') {
+      LeftMotor.concat(character);
+    } else if (command == 'r' && character != 'q') {
+      RightMotor.concat(character);
+    } else {
+      command = character;
+    }
+
+    if (command == 'q') {
+      done = true;
     }
   }
+}
+//  while (!done) {
+//    if(Serial.available() == 2){
+//       char command = Serial.read();
+//       int value = Serial.read();
+//       if(command == 'l') { 
+//          // control left motor
+//          //  robot.motor_left(value);
+//          leftValue = value;
+//       }
+//       if(command == 'r') {
+//           // contro right motor 
+//          //  robot.motor_left(motor_right);
+//          rightValue = value;
+//       }
+//       if(command == 'q') {
+//           // contro right motor 
+//          //  robot.motor_left(motor_right);
+//          done = true;
+//       }
+//    }
+//  }
 
-   robot.motor_left(LeftMotor.toInt());
-   robot.motor_right(RightMotor.toInt());
+//Serial.println("motor value");
+  int test = LeftMotor.toInt();
+  Serial.println(test);
 
-  // let the robot move for 0.5 sec before we analyse
-    delay(500);
+//  int m1 = 100;
+//  int m2 = -500;
 
-  robot.motor_left(0);
-  robot.motor_right(0);
+//  char buffer1[64];         //the ASCII of the integer will be stored in this char array
+//  itoa(m1, buffer1, 10); //(integer, yourBuffer, base)
+
+//  char buffer2[64];         //the ASCII of the integer will be stored in this char array
+//  itoa(m2, buffer2, 10); //(integer, yourBuffer, base)
+
+//  Serial.println("sending...");
+//  Serial.println(m2);
+  
+//    Serial.write(leftValue);
+//    Serial.write(buffer1);
+//    Serial.write(buffer2);
+//Serial.println("done sent");
 
    int ls0 = input.LS_RAW(0);
    int ls1 = input.LS_RAW(1);
@@ -83,7 +123,7 @@ void loop()
    int ls4 = input.LS_RAW(4);
    int ls5 = input.LS_RAW(5);
    int ls6 = input.LS_RAW(6);
-  
+
     char buffer1[64];         //the ASCII of the integer will be stored in this char array
     memset(buffer1, 0, sizeof(buffer1));
     itoa(ls0, buffer1, 10); //(integer, yourBuffer, base)
@@ -115,18 +155,8 @@ void loop()
     Serial.write(buffer1);
     Serial.write('q');
 
- 
-//  delay(1000);
-//  robot.forward(0);
-    
 
-  //robot.forward(255);           //Move robot forward
 
-  
-//  Serial.print("BTN : ");         
-//  Serial.println(input.isBTN_press());  //print condition of button 1 = press, 0 = release
-
-  // Serial.print(input.LS_RAW(3));
 }
 
 // initialize Serial

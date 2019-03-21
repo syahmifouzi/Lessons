@@ -60,7 +60,7 @@ type env struct {
 }
 
 func (hp *Hp) init() {
-	(*hp).nbSteps = 5
+	(*hp).nbSteps = 1
 	(*hp).episodeLength = 5
 	(*hp).nbDirections = 16
 	(*hp).nbBestDirections = 16
@@ -184,62 +184,135 @@ func gym(action [][]float64, port io.ReadWriteCloser) ([][]float64, float64, boo
 	// v[i][j] = 0
 
 	// Slot buat ACTION begin (gerakkan motor)
+	fmt.Println("Sending motor tru ble")
 
-	leftM := action[0][0]
-	rightM := action[0][1]
+	leftM := action[0][0] * 255
+	rightM := action[0][1] * 255
+
+	leftString := strconv.FormatFloat(math.Round(leftM), 'f', -1, 64)
+	rightString := strconv.FormatFloat(math.Round(rightM), 'f', -1, 64)
 
 	// Write 2 bytes to the port
-	b1 := []byte{'l', byte(leftM)}
+	b1 := []byte{'l'}
 	_, err := port.Write(b1)
 	if err != nil {
 		log.Fatalln("port.WriteLeft:", err)
 	}
+	b11 := []byte(leftString)
+	_, err = port.Write(b11)
+	if err != nil {
+		log.Fatalln("port.WriteLeft:", err)
+	}
 
-	// Write 2 bytes to the port
-	b2 := []byte{'r', byte(rightM)}
+	b2 := []byte{'r'}
 	_, err = port.Write(b2)
 	if err != nil {
 		log.Fatalln("port.WriteRight:", err)
 	}
+	b21 := []byte(rightString)
+	_, err = port.Write(b21)
+	if err != nil {
+		log.Fatalln("port.WriteLeft:", err)
+	}
 
-	// fmt.Println("motor left:", leftM)
-	// fmt.Println("motor right:", rightM)
+	b3 := []byte{'q'}
+	_, err = port.Write(b3)
+	if err != nil {
+		log.Fatalln("port.Write:", err)
+	}
 
+	fmt.Println("motor left:", leftString)
+	fmt.Println("motor right:", rightString)
+
+	fmt.Println("Done sending")
+	fmt.Println("Waiting for sensor")
 	// Slot buat ACTION end
 
 	// Sekarang read sensor condition aka STATE
 
-	buf := make([]byte, 128)
-	_, err = port.Read(buf)
-	if err != nil {
-		log.Fatal(err)
+	splice := make([]byte, 128)
+	nQuit := make([]byte, 1)
+	total := 0
+
+	for nQuit[0] != 'q' {
+		buf := make([]byte, 128)
+		n, err := port.Read(buf)
+		if err != nil {
+			log.Fatal(err)
+		}
+		// log.Println("port.Read:", buf[:n])
+
+		for i := 0; i < n; i++ {
+			splice[i+total] = buf[i]
+			nQuit[0] = buf[i]
+		}
+		// log.Println("is quit?", nQuit, nQuit[0])
+		total = total + n
 	}
+
 	// log.Println("port.Read:", buf[:n], n, buf[0:1], buf[1:2])
+	fmt.Println("done sensor.... now converting...")
+
+	var command byte
+	var ls0 []byte
+	var ls1 []byte
+	var ls2 []byte
+	var ls3 []byte
+	var ls4 []byte
+	var ls5 []byte
+	var ls6 []byte
+	for i := 0; i < total; i++ {
+		if command == 'a' && splice[i] > 47 && splice[i] < 58 {
+			ls0 = append(ls0, splice[i])
+		} else if command == 'b' && splice[i] > 47 && splice[i] < 58 {
+			ls1 = append(ls1, splice[i])
+		} else if command == 'c' && splice[i] > 47 && splice[i] < 58 {
+			ls2 = append(ls2, splice[i])
+		} else if command == 'd' && splice[i] > 47 && splice[i] < 58 {
+			ls3 = append(ls3, splice[i])
+		} else if command == 'e' && splice[i] > 47 && splice[i] < 58 {
+			ls4 = append(ls4, splice[i])
+		} else if command == 'f' && splice[i] > 47 && splice[i] < 58 {
+			ls5 = append(ls5, splice[i])
+		} else if command == 'g' && splice[i] > 47 && splice[i] < 58 {
+			ls6 = append(ls6, splice[i])
+		} else {
+			command = splice[i]
+		}
+	}
 
 	// s0 := string(buf[0:1])
-	s1 := string(buf[1:2])
-	s2 := string(buf[2:3])
-	s3 := string(buf[3:4])
-	s4 := string(buf[4:5])
-	s5 := string(buf[5:6])
+	s1 := string(ls1)
+	s2 := string(ls2)
+	s3 := string(ls3)
+	s4 := string(ls4)
+	s5 := string(ls5)
 	// s6 := string(buf[6:7])
 
-	// fmt.Print("Insert S0: ")
-	v[0][0] = float64(s1[0])
+	// f0, _ := strconv.ParseFloat(s0, 8)
+	f1, _ := strconv.ParseFloat(s1, 8)
+	f2, _ := strconv.ParseFloat(s2, 8)
+	f3, _ := strconv.ParseFloat(s3, 8)
+	f4, _ := strconv.ParseFloat(s4, 8)
+	f5, _ := strconv.ParseFloat(s5, 8)
+	// f6, _ := strconv.ParseFloat(s6, 8)
+
+	// fmt.Print("s1-s5:", s1, s2, s3, s4, s5)
+	v[0][0] = f1
 	// fmt.Print("Insert S1: ")
-	v[0][1] = float64(s2[0])
+	v[0][1] = f2
 	// fmt.Print("Insert S2: ")
-	v[0][2] = float64(s3[0])
+	v[0][2] = f3
 	// fmt.Print("Insert S3: ")
-	v[0][3] = float64(s4[0])
+	v[0][3] = f4
 	// fmt.Print("Insert S4: ")
-	v[0][4] = float64(s5[0])
+	v[0][4] = f5
 	// fmt.Print("Insert S5: ")
 	// v[0][5] = float64(s5[0])
 	// // fmt.Print("Insert S6: ")
 	// v[0][6] = float64(s6[0])
 
-	fmt.Print(v[0][0], v[0][1], v[0][2], v[0][3], v[0][4])
+	log.Println(v[0][0], v[0][1], v[0][2], v[0][3], v[0][4])
 
 	// Then decide the rewards
 	// it is hard to reach 900
@@ -247,12 +320,19 @@ func gym(action [][]float64, port io.ReadWriteCloser) ([][]float64, float64, boo
 	// fmt.Print("Insert Reward: ")
 	if leftM < 0 && rightM < 0 {
 		reward = -10
+		fmt.Println("Case 1: reward =", reward)
 	} else if leftM == 0 && rightM == 0 {
 		reward = -10
-	} else if v[0][2] > 700 && v[0][2] < 800 {
+		fmt.Println("Case 2: reward =", reward)
+	} else if v[0][2] < 600 {
+		reward = -20
+		fmt.Println("Case 3: reward =", reward)
+	} else if v[0][2] > 600 && leftM > 50 && rightM > 50 {
 		reward = 20
+		fmt.Println("Case 4: reward =", reward)
 	} else {
-		reward = -0.1
+		reward = -1.1
+		fmt.Println("Case 5: reward =", reward)
 	}
 
 	// Decide if it is done
@@ -291,7 +371,7 @@ func explore(hp Hp, normalizer Normalizer, policy Policy, direction string, delt
 		}
 		sumRewards += reward
 		numPlays++
-		// fmt.Println("numPlays", numPlays)
+		fmt.Println("numPlays", numPlays)
 	}
 	// fmt.Println("DONE")
 
@@ -347,7 +427,7 @@ func main() {
 		BaudRate:        9600,
 		DataBits:        8,
 		StopBits:        1,
-		MinimumReadSize: 5,
+		MinimumReadSize: 2,
 	}
 
 	// Open the port

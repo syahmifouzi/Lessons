@@ -52,6 +52,8 @@ func main() {
 
 	nQuit := 0
 
+	var splice [][]byte
+
 	for nQuit != 8 {
 		buf := make([]byte, 128)
 		n, err := port.Read(buf)
@@ -60,7 +62,13 @@ func main() {
 		}
 		log.Println("port.Read:", buf[:n])
 		nQuit = nQuit + n
+
+		for i := 0; i < n; i++ {
+			splice = append(splice, buf[i:i+1])
+		}
 	}
+
+	log.Println("splice", splice[3])
 
 	// log.Println("port.Read:", buf[:n], n, buf[0:1])
 
