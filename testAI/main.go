@@ -2,8 +2,10 @@ package main
 
 import (
 	"bufio"
+	"encoding/json"
 	"fmt"
 	"io"
+	"io/ioutil"
 	"log"
 	"math"
 	"math/rand"
@@ -34,6 +36,22 @@ set proportinality to determine a good/bad reward
 
 */
 
+var memo MemoryInit
+var thetaToWrite [][]float64
+var nToWrite [][]float64
+var meanToWrite [][]float64
+var meanDiffToWrite [][]float64
+var varianceToWrite [][]float64
+
+// MemoryInit ...
+type MemoryInit struct {
+	Mean     [][]float64 `json:"mean"`
+	MeanDiff [][]float64 `json:"meanDiff"`
+	N        [][]float64 `json:"n"`
+	Theta    [][]float64 `json:"theta"`
+	Variance [][]float64 `json:"variance"`
+}
+
 // Hp is Hyper Parameter
 type Hp struct {
 	nbSteps, episodeLength, nbDirections, nbBestDirections int
@@ -61,7 +79,7 @@ type env struct {
 
 func (hp *Hp) init() {
 	(*hp).nbSteps = 1
-	(*hp).episodeLength = 5
+	(*hp).episodeLength = 100
 	(*hp).nbDirections = 16
 	(*hp).nbBestDirections = 16
 	(*hp).learningRate = 0.02
@@ -73,6 +91,13 @@ func (nm *Normalizer) init(nbInputs int) {
 	(*nm).mean = zeros(1, nbInputs)
 	(*nm).meanDiff = zeros(1, nbInputs)
 	(*nm).variance = zeros(1, nbInputs)
+}
+
+func (nm *Normalizer) init2(nbInputs int) {
+	(*nm).n = memo.N
+	(*nm).mean = memo.Mean
+	(*nm).meanDiff = memo.MeanDiff
+	(*nm).variance = memo.Variance
 }
 
 func (nm *Normalizer) observe(x [][]float64) {
@@ -87,6 +112,11 @@ func (nm *Normalizer) observe(x [][]float64) {
 	variance1 := bahagi((*nm).meanDiff, (*nm).n)
 	variance1 = clipMin(variance1, 1e-2)
 	(*nm).variance = variance1
+
+	nToWrite = (*nm).n
+	meanToWrite = (*nm).mean
+	meanDiffToWrite = (*nm).meanDiff
+	varianceToWrite = (*nm).variance
 }
 
 func (nm *Normalizer) normalize(inputs [][]float64) [][]float64 {
@@ -99,6 +129,10 @@ func (nm *Normalizer) normalize(inputs [][]float64) [][]float64 {
 
 func (p *Policy) init(inputSize, outputSize int) {
 	(*p).theta = zeros(outputSize, inputSize)
+}
+
+func (p *Policy) init2(inputSize, outputSize int) {
+	(*p).theta = memo.Theta
 }
 
 func (p *Policy) evaluate(input, delta [][]float64, direction string, hp Hp) [][]float64 {
@@ -151,6 +185,8 @@ func (p *Policy) update(rollout []rollouts, sigmaR float64, hp Hp) {
 	ss2 := darabN(step, ss1)
 
 	(*p).theta = tambah((*p).theta, ss2)
+
+	thetaToWrite = (*p).theta
 }
 
 func readIn() float64 {
@@ -315,31 +351,99 @@ func gym(action [][]float64, port io.ReadWriteCloser) ([][]float64, float64, boo
 	log.Println(v[0][0], v[0][1], v[0][2], v[0][3], v[0][4])
 
 	// Then decide the rewards
+	reward := getReward(leftM, rightM, v[0][0], v[0][1], v[0][2], v[0][3], v[0][4])
 	// it is hard to reach 900
-	var reward float64
-	// fmt.Print("Insert Reward: ")
-	if leftM < 0 && rightM < 0 {
-		reward = -10
-		fmt.Println("Case 1: reward =", reward)
-	} else if leftM == 0 && rightM == 0 {
-		reward = -10
-		fmt.Println("Case 2: reward =", reward)
-	} else if v[0][2] < 600 {
-		reward = -20
-		fmt.Println("Case 3: reward =", reward)
-	} else if v[0][2] > 600 && leftM > 50 && rightM > 50 {
-		reward = 20
-		fmt.Println("Case 4: reward =", reward)
-	} else {
-		reward = -1.1
-		fmt.Println("Case 5: reward =", reward)
-	}
+	// var reward float64
+	// // fmt.Print("Insert Reward: ")
+	// if leftM < 0 && rightM < 0 {
+	// 	reward = -10
+	// 	fmt.Println("Case 1: reward =", reward)
+	// } else if leftM == 0 && rightM == 0 {
+	// 	reward = -10
+	// 	fmt.Println("Case 2: reward =", reward)
+	// } else if v[0][2] < 600 {
+	// 	reward = -20
+	// 	fmt.Println("Case 3: reward =", reward)
+	// } else if v[0][2] > 600 && leftM > 50 && rightM > 50 {
+	// 	reward = 20
+	// 	fmt.Println("Case 4: reward =", reward)
+	// } else {
+	// 	reward = -1.1
+	// 	fmt.Println("Case 5: reward =", reward)
+	// }
 
 	// Decide if it is done
 	done := false
 	// fmt.Println("reward:", reward)
 
 	return v, reward, done
+}
+
+func getReward(lm, rm, s1, s2, s3, s4, s5 float64) float64 {
+
+	var reward, k1m, k2m, k3s, k4s, k5s, k6s, k7s float64
+
+	k1m = lm / 255
+	k1m = 1 - k1m
+
+	k2m = rm / 255
+	k2m = 1 - k2m
+
+	k3s = 0.0
+	if s1 > 600 && s1 < 800 {
+		k3s = 0
+	} else if s1 < 600 {
+		k3s = s1 / 600
+		k3s = 1 - k3s
+	} else if s1 > 800 {
+		k3s = s1 - 800
+		k3s = k3s / 600
+	}
+
+	k4s = 0.0
+	if s2 > 500 && s2 < 700 {
+		k4s = 0
+	} else if s2 < 500 {
+		k4s = s2 / 500
+		k4s = 1 - k4s
+	} else if s2 > 700 {
+		k4s = s2 - 700
+		k4s = k4s / 700
+	}
+
+	k5s = 0.0
+	if s3 > 900 {
+		k5s = 0
+	} else if s3 < 900 {
+		k5s = s3 / 900
+		k5s = 1 - k5s
+	}
+
+	k6s = 0.0
+	if s4 > 500 && s4 < 700 {
+		k6s = 0
+	} else if s4 < 500 {
+		k6s = s4 / 500
+		k6s = 1 - k6s
+	} else if s4 > 700 {
+		k6s = s4 - 700
+		k6s = k6s / 700
+	}
+
+	k7s = 0.0
+	if s5 > 600 && s5 < 800 {
+		k7s = 0
+	} else if s5 < 600 {
+		k7s = s5 / 600
+		k7s = 1 - k7s
+	} else if s5 > 800 {
+		k7s = s5 - 800
+		k7s = k7s / 600
+	}
+
+	reward = 13 - (2 * k1m) - (2 * k2m) - (3 * k3s) - (4 * k4s) - (5 * k5s) - (4 * k6s) - (3 * k7s)
+
+	return reward
 }
 
 // RESET = 1x5
@@ -444,16 +548,158 @@ func main() {
 	nbOutputs := 2
 
 	policy := Policy{}
-	policy.init(nbInputs, nbOutputs)
+	// policy.init(nbInputs, nbOutputs)
 
 	normalizer := Normalizer{}
-	normalizer.init(nbInputs)
+	// normalizer.init(nbInputs)
+
+	db := "./memory/memory.json"
+	exs, err := exists(db)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	if !exs {
+		policy.init(nbInputs, nbOutputs)
+		normalizer.init(nbInputs)
+	} else {
+		content, err := ioutil.ReadFile(db)
+		if err != nil {
+			log.Fatalln(err)
+		}
+		// fmt.Println("content:", content)
+		if err = json.Unmarshal(content, &memo); err != nil {
+			log.Fatalln(err)
+		}
+
+		policy.init2(nbInputs, nbOutputs)
+		normalizer.init2(nbInputs)
+	}
 
 	train(hp, policy, normalizer, nbInputs, nbOutputs, port)
 
 	defer port.Close()
 
+	memoTheta()
+
 	fmt.Println("End")
+}
+
+func exists(path string) (bool, error) {
+	if _, err := os.Stat(path); err != nil {
+		if os.IsNotExist(err) {
+			// file does not exist
+			return false, nil
+		}
+		// exist but got other error
+		return true, err
+	}
+	return true, nil
+}
+
+func memoTheta() {
+	db := "./memory/memory.json"
+	s := "{\"theta\":["
+
+	// s := fmt.Sprintf("%f", (*p).theta[0][0])
+
+	for i := 0; i < len(thetaToWrite); i++ {
+		s = s + "["
+		for j := 0; j < len(thetaToWrite[0]); j++ {
+			temp := strconv.FormatFloat(thetaToWrite[i][j], 'f', -1, 64)
+			s = s + temp
+			if j != len(thetaToWrite[0])-1 {
+				s = s + ","
+			}
+		}
+		s = s + "]"
+		if i != len(thetaToWrite)-1 {
+			s = s + ","
+		}
+	}
+
+	s = s + "],\"n\":["
+
+	for i := 0; i < len(nToWrite); i++ {
+		s = s + "["
+		for j := 0; j < len(nToWrite[0]); j++ {
+			temp := strconv.FormatFloat(nToWrite[i][j], 'f', -1, 64)
+			s = s + temp
+			if j != len(nToWrite[0])-1 {
+				s = s + ","
+			}
+		}
+		s = s + "]"
+		if i != len(nToWrite)-1 {
+			s = s + ","
+		}
+	}
+
+	s = s + "],\"mean\":["
+
+	for i := 0; i < len(meanToWrite); i++ {
+		s = s + "["
+		for j := 0; j < len(meanToWrite[0]); j++ {
+			temp := strconv.FormatFloat(meanToWrite[i][j], 'f', -1, 64)
+			s = s + temp
+			if j != len(meanToWrite[0])-1 {
+				s = s + ","
+			}
+		}
+		s = s + "]"
+		if i != len(meanToWrite)-1 {
+			s = s + ","
+		}
+	}
+
+	s = s + "],\"meanDiff\":["
+
+	for i := 0; i < len(meanDiffToWrite); i++ {
+		s = s + "["
+		for j := 0; j < len(meanDiffToWrite[0]); j++ {
+			temp := strconv.FormatFloat(meanDiffToWrite[i][j], 'f', -1, 64)
+			s = s + temp
+			if j != len(meanDiffToWrite[0])-1 {
+				s = s + ","
+			}
+		}
+		s = s + "]"
+		if i != len(meanDiffToWrite)-1 {
+			s = s + ","
+		}
+	}
+
+	s = s + "],\"variance\":["
+
+	for i := 0; i < len(varianceToWrite); i++ {
+		s = s + "["
+		for j := 0; j < len(varianceToWrite[0]); j++ {
+			temp := strconv.FormatFloat(varianceToWrite[i][j], 'f', -1, 64)
+			s = s + temp
+			if j != len(varianceToWrite[0])-1 {
+				s = s + ","
+			}
+		}
+		s = s + "]"
+		if i != len(varianceToWrite)-1 {
+			s = s + ","
+		}
+	}
+
+	s = s + "]}"
+
+	var result map[string]interface{}
+	var err error
+	if err = json.Unmarshal([]byte(s), &result); err != nil {
+		log.Fatalln(err)
+	}
+	var b []byte
+	b, err = json.Marshal(result)
+	if err != nil {
+		log.Fatalln(err)
+	}
+	if err = ioutil.WriteFile(db, b, 0644); err != nil {
+		log.Fatalln(err)
+	}
 }
 
 func randomizeValue(r int, c int) [][]float64 {
