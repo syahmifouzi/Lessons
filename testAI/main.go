@@ -12,6 +12,7 @@ import (
 	"os"
 	"sort"
 	"strconv"
+	"time"
 
 	"github.com/jacobsa/go-serial/serial"
 	"gonum.org/v1/gonum/stat"
@@ -79,7 +80,7 @@ type env struct {
 
 func (hp *Hp) init() {
 	(*hp).nbSteps = 1
-	(*hp).episodeLength = 100
+	(*hp).episodeLength = 10
 	(*hp).nbDirections = 16
 	(*hp).nbBestDirections = 16
 	(*hp).learningRate = 0.02
@@ -222,8 +223,33 @@ func gym(action [][]float64, port io.ReadWriteCloser) ([][]float64, float64, boo
 	// Slot buat ACTION begin (gerakkan motor)
 	fmt.Println("Sending motor tru ble")
 
-	leftM := action[0][0] * 255
-	rightM := action[0][1] * 255
+	// leftM := action[0][0] * 255
+	// rightM := action[0][1] * 255
+
+	leftM := action[0][0] * 205
+	rightM := action[0][1] * 205
+
+	if leftM < 0 {
+		leftM = leftM - 50
+	} else {
+		leftM = leftM + 50
+	}
+
+	if rightM < 0 {
+		rightM = rightM - 50
+	} else {
+		rightM = rightM + 50
+	}
+
+	if math.IsNaN(math.Round(leftM)) {
+		fmt.Println("Left motor NaN triggered")
+		leftM = 0
+	}
+
+	if math.IsNaN(math.Round(rightM)) {
+		fmt.Println("Right motor NaN triggered")
+		rightM = 0
+	}
 
 	leftString := strconv.FormatFloat(math.Round(leftM), 'f', -1, 64)
 	rightString := strconv.FormatFloat(math.Round(rightM), 'f', -1, 64)
@@ -374,7 +400,7 @@ func gym(action [][]float64, port io.ReadWriteCloser) ([][]float64, float64, boo
 
 	// Decide if it is done
 	done := false
-	// fmt.Println("reward:", reward)
+	fmt.Println("reward:", reward)
 
 	return v, reward, done
 }
@@ -441,7 +467,7 @@ func getReward(lm, rm, s1, s2, s3, s4, s5 float64) float64 {
 		k7s = k7s / 600
 	}
 
-	reward = 13 - (2 * k1m) - (2 * k2m) - (3 * k3s) - (4 * k4s) - (5 * k5s) - (4 * k6s) - (3 * k7s)
+	reward = 5 - (2 * k1m) - (2 * k2m) - (3 * k3s) - (4 * k4s) - (5 * k5s) - (4 * k6s) - (3 * k7s)
 
 	return reward
 }
@@ -475,7 +501,7 @@ func explore(hp Hp, normalizer Normalizer, policy Policy, direction string, delt
 		}
 		sumRewards += reward
 		numPlays++
-		fmt.Println("numPlays", numPlays)
+		// fmt.Println("numPlays", numPlays)
 	}
 	// fmt.Println("DONE")
 
@@ -559,9 +585,11 @@ func main() {
 		log.Fatalln(err)
 	}
 	if !exs {
+		fmt.Println("Not exist")
 		policy.init(nbInputs, nbOutputs)
 		normalizer.init(nbInputs)
 	} else {
+		fmt.Println("exist")
 		content, err := ioutil.ReadFile(db)
 		if err != nil {
 			log.Fatalln(err)
@@ -601,6 +629,11 @@ func memoTheta() {
 	s := "{\"theta\":["
 
 	// s := fmt.Sprintf("%f", (*p).theta[0][0])
+	fmt.Println("theta:", thetaToWrite)
+	fmt.Println("n:", nToWrite)
+	fmt.Println("mean:", meanToWrite)
+	fmt.Println("meanDiff:", meanDiffToWrite)
+	fmt.Println("variance:", varianceToWrite)
 
 	for i := 0; i < len(thetaToWrite); i++ {
 		s = s + "["
@@ -707,9 +740,9 @@ func randomizeValue(r int, c int) [][]float64 {
 	// or use crypto/rand for more secure way
 	// https://gobyexample.com/random-numbers
 	// so that we would get different output each time
-	// rand.Seed(time.Now().UnixNano())
+	rand.Seed(time.Now().UnixNano())
 	// OR WE CAN JUST CONSTANT IT FOR NOW!
-	rand.Seed(0)
+	// rand.Seed(0)
 
 	v := make([][]float64, r)
 	for i := 0; i < r; i++ {
@@ -744,7 +777,10 @@ func std(m1 [][]float64) float64 {
 	// https://www.gonum.org/post/intro-to-stats-with-gonum/
 	// mean := stat.Mean(m1[0], nil)
 	variance := stat.Variance(m1[0], nil)
-	stddev := math.Sqrt(variance)
+	if math.IsNaN(math.Sqrt(variance)) {
+		fmt.Println("std() NaN encounter")
+	}
+	stddev := math.Sqrt(math.Abs(variance))
 
 	return stddev
 }
@@ -972,7 +1008,10 @@ func sqrt(m1 [][]float64) [][]float64 {
 
 	for i, v := range m1 {
 		for i2, v2 := range v {
-			s[i][i2] = math.Sqrt(v2)
+			if math.IsNaN(math.Sqrt(v2)) {
+				fmt.Println("sqrt() NaN encounter")
+			}
+			s[i][i2] = math.Sqrt(math.Abs(v2))
 		}
 	}
 

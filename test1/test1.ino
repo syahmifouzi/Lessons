@@ -70,11 +70,13 @@ void loop()
    robot.motor_left(LeftMotor.toInt());
    robot.motor_right(RightMotor.toInt());
 
-  // let the robot move for 0.5 sec before we analyse
+  // let the robot move for 1 sec before we analyse
     delay(500);
 
   robot.motor_left(0);
   robot.motor_right(0);
+
+//  delay(500);
 
    int ls0 = input.LS_RAW(0);
    int ls1 = input.LS_RAW(1);
