@@ -45,28 +45,9 @@ void setup()
 
 void loop()
 {
-  // For calibrating treshold
-  
-  while (!input.isBTN_press());
-  
-   // Serial.println("Sensor");
-  Serial.print(input.LS_RAW(0));      
-  Serial.print("\t");
-  Serial.print(input.LS_RAW(1));
-  Serial.print("\t");
-  Serial.print(input.LS_RAW(2));
-  Serial.print("\t");
-  Serial.print(input.LS_RAW(3));
-  Serial.print("\t");
-  Serial.print(input.LS_RAW(4));
-  Serial.print("\t");
-  Serial.print(input.LS_RAW(5));
-  Serial.print("\t");
-  Serial.println(input.LS_RAW(6));
-
-  // delay(3000);
-
-   
+  robot.motor_left(50);
+  robot.motor_right(50);
+  delay(500);
 }
 
 // initialize Serial
