@@ -10,9 +10,9 @@ const PI float64 = math.Pi
 
 // Robot is Hyper Parameter
 type Robot struct {
-	leftTyre, rightTyre, head                                 Coor
-	facing                                                    byte
-	m1, c1, m2, c2, mpx, mpy, tRad, tCir, width, height, side float64
+	leftTyre, rightTyre, head                                             Coor
+	facing                                                                byte
+	m1, c1, m2, c2, mpx, mpy, tRad, tCir, width, height, side, sideDegree float64
 }
 
 // Coor is Coordinate
@@ -32,6 +32,7 @@ func (bot *Robot) init() {
 	(*bot).width = 0.1225
 	(*bot).height = math.Sqrt(math.Pow(0.115, 2) - math.Pow((0.1225/2), 2)) // 0.09733
 	(*bot).side = 0.115
+	(*bot).sideDegree = (57.82 / 360) * 2 * PI // 1.0091493 rad
 	(*bot).tRad = 0.02375
 	(*bot).tCir = 2 * PI * 0.02375 // 0.14923
 	(*bot).facing = 'W'
@@ -42,28 +43,38 @@ func (bot *Robot) init() {
 
 func (bot *Robot) headPos() {
 	bot.getFacingDirection()
-	h := bot.height
+	s := bot.side
 	m := bot.m1
-	// fmt.Println("calling m1:", m)
-	t := (PI / 2) - math.Abs(math.Atan(m))
-	xComp := h * (math.Cos(t))
-	yComp := h * (math.Sin(t))
+	t := PI - bot.sideDegree - math.Abs(math.Atan(m))
+	xComp := s * (math.Cos(t))
+	yComp := s * (math.Sin(t))
 	f := bot.facing
 	switch f {
+	case 'W':
+		(*bot).head.x = bot.leftTyre.x + (bot.width / 2)
+		(*bot).head.y = bot.leftTyre.y + bot.height
+	case 'A':
+		(*bot).head.x = bot.leftTyre.x - bot.height
+		(*bot).head.y = bot.leftTyre.y + (bot.width / 2)
+	case 'X':
+		(*bot).head.x = bot.leftTyre.x - (bot.width / 2)
+		(*bot).head.y = bot.leftTyre.y - bot.height
+	case 'D':
+		(*bot).head.x = bot.leftTyre.x + bot.height
+		(*bot).head.y = bot.leftTyre.y - (bot.width / 2)
 	case 'Q':
-		(*bot).head.x = bot.mpx - xComp
-		(*bot).head.y = bot.mpy + yComp
+		(*bot).head.x = bot.leftTyre.x - xComp
+		(*bot).head.y = bot.leftTyre.y + yComp
 	case 'E':
-		(*bot).head.x = bot.mpx + xComp
-		(*bot).head.y = bot.mpy + yComp
+		(*bot).head.x = bot.rightTyre.x + xComp
+		(*bot).head.y = bot.rightTyre.y + yComp
 	case 'Z':
-		(*bot).head.x = bot.mpx - xComp
-		(*bot).head.y = bot.mpy - yComp
+		(*bot).head.x = bot.rightTyre.x - xComp
+		(*bot).head.y = bot.rightTyre.y - yComp
 	case 'C':
-		(*bot).head.x = bot.mpx + xComp
-		(*bot).head.y = bot.mpy - yComp
+		(*bot).head.x = bot.leftTyre.x + xComp
+		(*bot).head.y = bot.leftTyre.y - yComp
 	}
-
 }
 
 func (bot *Robot) moveBot(l, r float64) {
@@ -1340,47 +1351,43 @@ func (bot *Robot) moveW(rot float64) {
 	case 'W':
 		(*bot).leftTyre.y = bot.leftTyre.y + d
 		(*bot).rightTyre.y = bot.rightTyre.y + d
-		(*bot).head.y = bot.head.y + d
+		(*bot).headPos()
 	case 'X':
 		(*bot).leftTyre.y = bot.leftTyre.y - d
 		(*bot).rightTyre.y = bot.rightTyre.y - d
-		(*bot).head.y = bot.head.y - d
+		(*bot).headPos()
 	case 'A':
 		(*bot).leftTyre.x = bot.leftTyre.x - d
 		(*bot).rightTyre.x = bot.rightTyre.x - d
-		(*bot).head.x = bot.head.x - d
+		(*bot).headPos()
 	case 'D':
 		(*bot).leftTyre.x = bot.leftTyre.x + d
 		(*bot).rightTyre.x = bot.rightTyre.x + d
-		(*bot).head.x = bot.head.x + d
+		(*bot).headPos()
 	case 'Q':
 		(*bot).leftTyre.x = bot.leftTyre.x - xComp
 		(*bot).leftTyre.y = bot.leftTyre.y + yComp
 		(*bot).rightTyre.x = bot.rightTyre.x - xComp
 		(*bot).rightTyre.y = bot.rightTyre.y + yComp
-		(*bot).head.x = bot.head.x - xComp
-		(*bot).head.y = bot.head.y + yComp
+		(*bot).headPos()
 	case 'E':
 		(*bot).leftTyre.x = bot.leftTyre.x + xComp
 		(*bot).leftTyre.y = bot.leftTyre.y + yComp
 		(*bot).rightTyre.x = bot.rightTyre.x + xComp
 		(*bot).rightTyre.y = bot.rightTyre.y + yComp
-		(*bot).head.x = bot.head.x + xComp
-		(*bot).head.y = bot.head.y + yComp
+		(*bot).headPos()
 	case 'Z':
 		(*bot).leftTyre.x = bot.leftTyre.x - xComp
 		(*bot).leftTyre.y = bot.leftTyre.y - yComp
 		(*bot).rightTyre.x = bot.rightTyre.x - xComp
 		(*bot).rightTyre.y = bot.rightTyre.y - yComp
-		(*bot).head.x = bot.head.x - xComp
-		(*bot).head.y = bot.head.y - yComp
+		(*bot).headPos()
 	case 'C':
 		(*bot).leftTyre.x = bot.leftTyre.x + xComp
 		(*bot).leftTyre.y = bot.leftTyre.y - yComp
 		(*bot).rightTyre.x = bot.rightTyre.x + xComp
 		(*bot).rightTyre.y = bot.rightTyre.y - yComp
-		(*bot).head.x = bot.head.x + xComp
-		(*bot).head.y = bot.head.y - yComp
+		(*bot).headPos()
 	}
 }
 
@@ -1397,47 +1404,43 @@ func (bot *Robot) moveX(rot float64) {
 	case 'W':
 		(*bot).leftTyre.y = bot.leftTyre.y - d
 		(*bot).rightTyre.y = bot.rightTyre.y - d
-		(*bot).head.y = bot.head.y - d
+		(*bot).headPos()
 	case 'X':
 		(*bot).leftTyre.y = bot.leftTyre.y + d
 		(*bot).rightTyre.y = bot.rightTyre.y + d
-		(*bot).head.y = bot.head.y + d
+		(*bot).headPos()
 	case 'A':
 		(*bot).leftTyre.x = bot.leftTyre.x + d
 		(*bot).rightTyre.x = bot.rightTyre.x + d
-		(*bot).head.x = bot.head.x + d
+		(*bot).headPos()
 	case 'D':
 		(*bot).leftTyre.x = bot.leftTyre.x - d
 		(*bot).rightTyre.x = bot.rightTyre.x - d
-		(*bot).head.x = bot.head.x - d
+		(*bot).headPos()
 	case 'Q':
 		(*bot).leftTyre.x = bot.leftTyre.x + xComp
 		(*bot).leftTyre.y = bot.leftTyre.y - yComp
 		(*bot).rightTyre.x = bot.rightTyre.x + xComp
 		(*bot).rightTyre.y = bot.rightTyre.y - yComp
-		(*bot).head.x = bot.head.x + xComp
-		(*bot).head.y = bot.head.y - yComp
+		(*bot).headPos()
 	case 'E':
 		(*bot).leftTyre.x = bot.leftTyre.x - xComp
 		(*bot).leftTyre.y = bot.leftTyre.y - yComp
 		(*bot).rightTyre.x = bot.rightTyre.x - xComp
 		(*bot).rightTyre.y = bot.rightTyre.y - yComp
-		(*bot).head.x = bot.head.x - xComp
-		(*bot).head.y = bot.head.y - yComp
+		(*bot).headPos()
 	case 'Z':
 		(*bot).leftTyre.x = bot.leftTyre.x + xComp
 		(*bot).leftTyre.y = bot.leftTyre.y + yComp
 		(*bot).rightTyre.x = bot.rightTyre.x + xComp
 		(*bot).rightTyre.y = bot.rightTyre.y + yComp
-		(*bot).head.x = bot.head.x + xComp
-		(*bot).head.y = bot.head.y + yComp
+		(*bot).headPos()
 	case 'C':
 		(*bot).leftTyre.x = bot.leftTyre.x - xComp
 		(*bot).leftTyre.y = bot.leftTyre.y + yComp
 		(*bot).rightTyre.x = bot.rightTyre.x - xComp
 		(*bot).rightTyre.y = bot.rightTyre.y + yComp
-		(*bot).head.x = bot.head.x - xComp
-		(*bot).head.y = bot.head.y + yComp
+		(*bot).headPos()
 	}
 }
 
@@ -1461,21 +1464,21 @@ func (bot *Robot) printBotCoor(m string) {
 func (bot *Robot) getFacingDirection() {
 	if bot.leftTyre.y == bot.rightTyre.y {
 		if bot.leftTyre.x < bot.rightTyre.x {
-			fmt.Println("Facing North")
+			fmt.Println("Facing W")
 			fmt.Println("-------------------------------------------")
 			(*bot).facing = 'W'
 		} else {
-			fmt.Println("Facing South")
+			fmt.Println("Facing X")
 			fmt.Println("-------------------------------------------")
 			(*bot).facing = 'X'
 		}
 	} else if bot.leftTyre.x == bot.rightTyre.x {
 		if bot.leftTyre.y < bot.rightTyre.y {
-			fmt.Println("Facing West")
+			fmt.Println("Facing A")
 			fmt.Println("---------------------------------------------")
 			(*bot).facing = 'A'
 		} else {
-			fmt.Println("Facing East")
+			fmt.Println("Facing D")
 			fmt.Println("--------------------------------------------")
 			(*bot).facing = 'D'
 		}
@@ -1496,22 +1499,22 @@ func (bot *Robot) getGradient() {
 	if bot.leftTyre.x < bot.rightTyre.x {
 		mpxc = bot.leftTyre.x + mpxv
 		if m1 > 0 {
-			fmt.Println("Facing North West")
+			fmt.Println("Facing Q")
 			fmt.Println("----------------------------------------------------")
 			(*bot).facing = 'Q'
 		} else {
-			fmt.Println("Facing North East")
+			fmt.Println("Facing E")
 			fmt.Println("-----------------------------------------------------")
 			(*bot).facing = 'E'
 		}
 	} else {
 		mpxc = bot.rightTyre.x + mpxv
 		if m1 > 0 {
-			fmt.Println("Facing South East")
+			fmt.Println("Facing C")
 			fmt.Println("------------------------------------------------------")
 			(*bot).facing = 'C'
 		} else {
-			fmt.Println("Facing South West")
+			fmt.Println("Facing Z")
 			fmt.Println("-------------------------------------------------------")
 			(*bot).facing = 'Z'
 		}
@@ -1547,12 +1550,19 @@ func main() {
 	bot := Robot{}
 	bot.init()
 
-	// bot.moveQ(0.407894737, 1.052631579)
+	// bot.moveBot(0.407894737, 1.052631579)
 	// bot.moveBot(0.444739, -0.2)
 
-	bot.moveBot(1, 1)
+	bot.moveBot(1.052631579, 0.407894737)
+	bot.moveBot(1.052631579, 0.407894737)
+	bot.moveBot(1.052631579, 0.407894737)
+	bot.moveBot(1.052631579, 0.407894737)
+	bot.moveBot(1.052631579, 0.407894737)
+	bot.moveBot(1.052631579, 0.407894737)
+	bot.moveBot(1.052631579, 0.407894737)
+	bot.moveBot(1.052631579, 0.407894737)
 
-	bot.printBotCoor("moved Bot")
+	bot.printBotCoor("moved bot")
 
 	fmt.Println("")
 	fmt.Println("----------------------------------------------")
