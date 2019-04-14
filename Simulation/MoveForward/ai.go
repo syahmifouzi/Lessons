@@ -81,8 +81,9 @@ type env struct {
 }
 
 func (hp *Hp) init() {
-	(*hp).nbSteps = 3
-	(*hp).episodeLength = 1000
+	(*hp).nbSteps = 100
+	// this part (episode length) is very crucial and will determine the model is working or not (must tally with "robot goal/done" @below function) (or maybe not)
+	(*hp).episodeLength = 10000000
 	(*hp).nbDirections = 16
 	(*hp).nbBestDirections = 16
 	(*hp).learningRate = 0.02
@@ -180,9 +181,6 @@ func (p *Policy) update(rollout []rollouts, sigmaR float64, hp Hp) {
 
 	step := zeros(len(rollout[0].d), len(rollout[0].d[0]))
 
-	fmt.Println("sigmaR", sigmaR)
-	os.Exit(3)
-
 	for _, v := range rollout {
 		s1 := v.rPos - v.rNeg
 		s2 := darabN(v.d, s1)
@@ -190,10 +188,15 @@ func (p *Policy) update(rollout []rollouts, sigmaR float64, hp Hp) {
 		step = tambah(step, s2)
 	}
 
+	// fmt.Println("sigmaR", sigmaR)
+	// os.Exit(3)
+
 	ss1 := float64(hp.nbBestDirections) * sigmaR
 	ss1 = float64(hp.learningRate) / ss1
 	if math.IsInf(ss1, 0) {
+		// this part will happen if the modal is not working (episode length & goal are not tally with each other)
 		fmt.Println("err: ss1 = Inf")
+		fmt.Println("sigmaR", sigmaR)
 		os.Exit(3)
 		// ss1 = 0
 	}
@@ -280,13 +283,15 @@ func (bot *Robot) gym(action [][]float64) ([][]float64, float64, bool) {
 	// fmt.Println(v[0][0], v[0][1], v[0][2], v[0][3], v[0][4], v[0][5])
 
 	// Then decide the rewards
-	reward := getReward(v[0][0], v[0][1], v[0][2], v[0][3], v[0][4], v[0][5])
+	reward := getReward(v[0][0], v[0][1], v[0][2], v[0][3], v[0][4], v[0][5], v[0][6])
 	// it is hard to reach 900
 
 	// Decide if it is done
 	done := false
-	if math.Abs(v[0][0]) > 100 || math.Abs(v[0][2]) > 100 {
-		fmt.Println("done1:", v[0][0], "done2:", v[0][2])
+
+	// this part ("done" AKA. "robot goal") is very crucial and will determine the model is working or not
+	if math.Abs(v[0][0]) > 5 || math.Abs(v[0][2]) > 5 {
+		// fmt.Println("done1:", v[0][0], "done2:", v[0][2])
 		done = true
 	}
 	// fmt.Println("reward:", reward)
@@ -294,9 +299,9 @@ func (bot *Robot) gym(action [][]float64) ([][]float64, float64, bool) {
 	return v, reward, done
 }
 
-func getReward(v0, v1, v2, v3, v4, v5 float64) float64 {
+func getReward(v0, v1, v2, v3, v4, v5, v6 float64) float64 {
 
-	var reward, e0, e1, e2, e3, e4, e5 float64
+	var reward, e0, e1, e2, e3, e4, e5, e6 float64
 
 	//eq. v0 || y-axis
 	e0 = -v0 + 100
@@ -305,8 +310,9 @@ func getReward(v0, v1, v2, v3, v4, v5 float64) float64 {
 	e3 = -v3 + 1
 	e4 = -v4 + 1
 	e5 = v5
+	e6 = v6
 
-	reward = 23 - (6 * e0) - (5 * e1) - (4 * e2) - (3 * e3) - (3 * e4) - (2 * e5)
+	reward = 25 - (6 * e0) - (5 * e1) - (4 * e2) - (3 * e3) - (3 * e4) - (2 * e5) - (2 * e6)
 
 	return reward
 }
@@ -337,9 +343,9 @@ func explore(hp Hp, normalizer Normalizer, policy Policy, direction string, delt
 	for !done && numPlays < float64(hp.episodeLength) {
 		normalizer.observe(state)
 		state = normalizer.normalize(state)
-		fmt.Println("normalize state:", state)
+		// fmt.Println("normalize state:", state)
 		action := policy.evaluate(state, delta, direction, hp)
-		fmt.Println("action:", action)
+		// fmt.Println("action:", action)
 
 		state, reward, done = bot.gym(action)
 		// fmt.Println("state:", state)
@@ -354,7 +360,7 @@ func explore(hp Hp, normalizer Normalizer, policy Policy, direction string, delt
 		numPlays++
 		// fmt.Println("numPlays", numPlays)
 	}
-	bot.printBotCoor("coor")
+	// bot.printBotCoor("coor")
 
 	return sumRewards
 }
