@@ -82,7 +82,7 @@ type env struct {
 func (hp *Hp) init() {
 	(*hp).nbSteps = 100
 	// this part (episode length) is very crucial and will determine the model is working or not (must tally with "robot goal/done" @below function) (or maybe not)
-	(*hp).episodeLength = 500000
+	(*hp).episodeLength = 90000
 	(*hp).nbDirections = 64
 	(*hp).nbBestDirections = 64
 	(*hp).learningRate = 0.02
@@ -308,7 +308,8 @@ func getReward(v0, v1, v2, v3, v4, v5, v6 float64) float64 {
 	e5 = v5
 	e6 = v6
 
-	reward = 25 - (6 * e0) - (5 * e1) - (4 * e2) - (3 * e3) - (3 * e4) - (2 * e5) - (2 * e6)
+	// the Tolerant of the reward is very important as well to determine the working model
+	reward = (4 * 25) - (6 * e0) - (5 * e1) - (4 * e2) - (3 * e3) - (3 * e4) - (2 * e5) - (2 * e6)
 
 	return reward
 }
