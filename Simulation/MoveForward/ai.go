@@ -44,8 +44,9 @@ var meanToWrite [][]float64
 var meanDiffToWrite [][]float64
 var varianceToWrite [][]float64
 
-var gInput = 7
+var gInput = 3
 var gOutput = 2
+var gBot Robot
 
 // MemoryInit ...
 type MemoryInit struct {
@@ -82,11 +83,11 @@ type env struct {
 }
 
 func (hp *Hp) init() {
-	(*hp).nbSteps = 1000
+	(*hp).nbSteps = 10000
 	// this part (episode length & direction) is very crucial and will determine the model is working or not (must tally with "robot goal/done" @below function) (or maybe not)
-	(*hp).episodeLength = 1000000
-	(*hp).nbDirections = 16
-	(*hp).nbBestDirections = 16
+	(*hp).episodeLength = 10000
+	(*hp).nbDirections = 64
+	(*hp).nbBestDirections = 64
 	(*hp).learningRate = 0.02
 	(*hp).noise = 0.03
 }
@@ -271,24 +272,24 @@ func (bot *Robot) gym(action [][]float64, gT float64) ([][]float64, float64, boo
 
 	// y-axis = 0.09733, degErr = 0, x-axis = 0, motorL = 0, motorR = 0, facing = 0
 	v[0][0] = bot.head.y
-	v[0][1] = bot.errDeg()
-	v[0][2] = bot.head.x
-	v[0][3] = leftM
-	v[0][4] = rightM
-	v[0][5] = fI
-	v[0][6] = gT
+	v[0][1] = bot.head.x
+	v[0][2] = gT
+	// v[0][3] = leftM
+	// v[0][4] = rightM
+	// v[0][5] = fI
+	// v[0][6] = bot.errDeg()
 
 	// fmt.Println(v[0][0], v[0][1], v[0][2], v[0][3], v[0][4], v[0][5])
 
 	// Then decide the rewards
-	reward := getReward(v[0][0], v[0][1], v[0][2], v[0][3], v[0][4], v[0][5], v[0][6])
+	reward := getReward(bot.head.y, bot.errDeg(), bot.head.x, fI, gT)
 	// it is hard to reach 900
 
 	// Decide if it is done
 	done := false
 
 	// this part ("done" AKA. "robot goal") is very crucial and will determine the model is working or not
-	if math.Abs(v[0][0]) > 5 || math.Abs(v[0][2]) > 5 {
+	if math.Abs(bot.head.y) > 5 || math.Abs(bot.head.x) > 5 {
 		// fmt.Println("done1:", v[0][0], "done2:", v[0][2])
 		done = true
 	}
@@ -297,28 +298,28 @@ func (bot *Robot) gym(action [][]float64, gT float64) ([][]float64, float64, boo
 	return v, reward, done
 }
 
-func getReward(v0, v1, v2, v3, v4, v5, v6 float64) float64 {
+func getReward(v0, v1, v2, v3, v4 float64) float64 {
 
-	var reward, e0, e1, e2, e3, e4, e5, e6 float64
+	var reward, e0, e1, e2, e3, e4 float64
 
 	//eq. v0 || y-axis
 	e0 = -v0 + 100
 	e1 = v1
 	e2 = math.Abs(v2)
-	e3 = -v3 + 1
-	e4 = -v4 + 1
-	e5 = v5
-	e6 = v6
+	e3 = v3
+	e4 = v4
 
 	// the Tolerant of the reward is very important as well to determine the working model
-	reward = (5 * 25) - (6 * e0) - (5 * e1) - (4 * e2) - (3 * e3) - (3 * e4) - (2 * e5) - (2 * e6)
+	// Reward ak sebelum ni tggi sgt (either -ve nye / +ve?)
+	reward = (20 * 20) - (0.5 * e0) - (0.4 * e1) - (0.3 * e2) - (0.2 * e3) - (0.1 * e4)
 
 	return reward
 }
 
 func (bot *Robot) envReset() [][]float64 {
 	// y-axis = 0.09733, degErr = 0, x-axis = 0, motorL = 0, motorR = 0, facing = 0
-	s := [][]float64{{0.09733, 0, 0, 0, 0, 0, 0}}
+	bot.init()
+	s := [][]float64{{bot.head.y, bot.head.x, 0}}
 
 	return s
 }
@@ -331,7 +332,6 @@ func explore(hp Hp, normalizer Normalizer, policy Policy, direction string, delt
 	// I assume reset the robot leg to default
 	// state := env.reset()
 	bot := Robot{}
-	bot.init()
 	state := bot.envReset()
 
 	done := false
@@ -361,7 +361,8 @@ func explore(hp Hp, normalizer Normalizer, policy Policy, direction string, delt
 		numPlays++
 		// fmt.Println("numPlays", numPlays)
 	}
-	// bot.printBotCoor("coor")
+	// bot.printBotCoor("done explore")
+	gBot = bot
 
 	return sumRewards
 }
@@ -406,6 +407,7 @@ func train(hp Hp, p Policy, normalizer Normalizer, inputSize, outputSize int) {
 
 		// Printing the final reward of the policy after the update
 		rewardEvaluation := explore(hp, normalizer, p, "none", deltas[0])
+		gBot.printBotCoor("coor")
 		fmt.Println("Step:", step, "Rewards:", rewardEvaluation)
 	}
 }
