@@ -44,7 +44,6 @@ var varianceToWrite [][]float64
 
 var gInput = 7
 var gOutput = 2
-var gTime float64
 
 // MemoryInit ...
 type MemoryInit struct {
@@ -83,9 +82,9 @@ type env struct {
 func (hp *Hp) init() {
 	(*hp).nbSteps = 100
 	// this part (episode length) is very crucial and will determine the model is working or not (must tally with "robot goal/done" @below function) (or maybe not)
-	(*hp).episodeLength = 10000000
-	(*hp).nbDirections = 16
-	(*hp).nbBestDirections = 16
+	(*hp).episodeLength = 500000
+	(*hp).nbDirections = 64
+	(*hp).nbBestDirections = 64
 	(*hp).learningRate = 0.02
 	(*hp).noise = 0.03
 }
@@ -233,7 +232,7 @@ func readIn() float64 {
 	return s
 }
 
-func (bot *Robot) gym(action [][]float64) ([][]float64, float64, bool) {
+func (bot *Robot) gym(action [][]float64, gT float64) ([][]float64, float64, bool) {
 	// to compile the state into array later
 	r := 1
 	c := gInput
@@ -268,9 +267,6 @@ func (bot *Robot) gym(action [][]float64) ([][]float64, float64, bool) {
 		fI = 2
 	}
 
-	gTime++
-	// fmt.Println("GTIME:", gTime)
-
 	// y-axis = 0.09733, degErr = 0, x-axis = 0, motorL = 0, motorR = 0, facing = 0
 	v[0][0] = bot.head.y
 	v[0][1] = bot.errDeg()
@@ -278,7 +274,7 @@ func (bot *Robot) gym(action [][]float64) ([][]float64, float64, bool) {
 	v[0][3] = leftM
 	v[0][4] = rightM
 	v[0][5] = fI
-	v[0][6] = gTime
+	v[0][6] = gT
 
 	// fmt.Println(v[0][0], v[0][1], v[0][2], v[0][3], v[0][4], v[0][5])
 
@@ -320,7 +316,6 @@ func getReward(v0, v1, v2, v3, v4, v5, v6 float64) float64 {
 func (bot *Robot) envReset() [][]float64 {
 	// y-axis = 0.09733, degErr = 0, x-axis = 0, motorL = 0, motorR = 0, facing = 0
 	s := [][]float64{{0.09733, 0, 0, 0, 0, 0, 0}}
-	gTime = 0
 
 	return s
 }
@@ -338,6 +333,9 @@ func explore(hp Hp, normalizer Normalizer, policy Policy, direction string, delt
 
 	done := false
 	var numPlays, sumRewards, reward float64
+	numPlays = 0
+	sumRewards = 0
+	reward = 0
 
 	// Calculate the accumulate reward on the full episode
 	for !done && numPlays < float64(hp.episodeLength) {
@@ -347,7 +345,7 @@ func explore(hp Hp, normalizer Normalizer, policy Policy, direction string, delt
 		action := policy.evaluate(state, delta, direction, hp)
 		// fmt.Println("action:", action)
 
-		state, reward, done = bot.gym(action)
+		state, reward, done = bot.gym(action, numPlays)
 		// fmt.Println("state:", state)
 		// fmt.Println("reward:", reward)
 
