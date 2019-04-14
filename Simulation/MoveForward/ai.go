@@ -42,6 +42,10 @@ var meanToWrite [][]float64
 var meanDiffToWrite [][]float64
 var varianceToWrite [][]float64
 
+var gInput = 7
+var gOutput = 2
+var gTime float64
+
 // MemoryInit ...
 type MemoryInit struct {
 	Mean     [][]float64 `json:"mean"`
@@ -77,8 +81,8 @@ type env struct {
 }
 
 func (hp *Hp) init() {
-	(*hp).nbSteps = 10
-	(*hp).episodeLength = 10
+	(*hp).nbSteps = 3
+	(*hp).episodeLength = 1000
 	(*hp).nbDirections = 16
 	(*hp).nbBestDirections = 16
 	(*hp).learningRate = 0.02
@@ -123,6 +127,10 @@ func (nm *Normalizer) normalize(inputs [][]float64) [][]float64 {
 	obsStd := sqrt((*nm).variance)
 	r1 := tolak(inputs, obsMean)
 	r1 = bahagi(r1, obsStd)
+	// fmt.Println("mean", (*nm).mean)
+	// fmt.Println("var", (*nm).variance)
+	// fmt.Println("input", inputs)
+	// fmt.Println("obs_std", obsStd)
 	return r1
 }
 
@@ -137,14 +145,14 @@ func (p *Policy) init2(inputSize, outputSize int) {
 func (p *Policy) evaluate(input, delta [][]float64, direction string, hp Hp) [][]float64 {
 	switch direction {
 	case "none":
-		fmt.Println("NONE")
+		// fmt.Println("NONE")
 		// fmt.Println("input", input)
 		// fmt.Println("theta", (*p).theta)
 		return dot(input, transpose((*p).theta))
 	case "positive":
 		r := darabN(delta, hp.noise)
 		r = tambah((*p).theta, r)
-		fmt.Println("POS")
+		// fmt.Println("POS")
 		// fmt.Println("input", input)
 		// fmt.Println("theta", (*p).theta)
 		// fmt.Println("transpose(r)", transpose(r))
@@ -152,7 +160,7 @@ func (p *Policy) evaluate(input, delta [][]float64, direction string, hp Hp) [][
 	default:
 		r := darabN(delta, hp.noise)
 		r = tolak((*p).theta, r)
-		fmt.Println("NEG")
+		// fmt.Println("NEG")
 		// fmt.Println("input", input)
 		// fmt.Println("theta", (*p).theta)
 		// fmt.Println("transpose(r)", transpose(r))
@@ -172,6 +180,9 @@ func (p *Policy) update(rollout []rollouts, sigmaR float64, hp Hp) {
 
 	step := zeros(len(rollout[0].d), len(rollout[0].d[0]))
 
+	fmt.Println("sigmaR", sigmaR)
+	os.Exit(3)
+
 	for _, v := range rollout {
 		s1 := v.rPos - v.rNeg
 		s2 := darabN(v.d, s1)
@@ -186,7 +197,6 @@ func (p *Policy) update(rollout []rollouts, sigmaR float64, hp Hp) {
 		os.Exit(3)
 		// ss1 = 0
 	}
-	// fmt.Println("sigmaR", sigmaR)
 	// fmt.Println("ss1", ss1)
 	ss2 := darabN(step, ss1)
 
@@ -223,7 +233,7 @@ func readIn() float64 {
 func (bot *Robot) gym(action [][]float64) ([][]float64, float64, bool) {
 	// to compile the state into array later
 	r := 1
-	c := 6
+	c := gInput
 	v := make([][]float64, r)
 	for i := 0; i < r; i++ {
 		v[i] = make([]float64, c)
@@ -255,6 +265,9 @@ func (bot *Robot) gym(action [][]float64) ([][]float64, float64, bool) {
 		fI = 2
 	}
 
+	gTime++
+	// fmt.Println("GTIME:", gTime)
+
 	// y-axis = 0.09733, degErr = 0, x-axis = 0, motorL = 0, motorR = 0, facing = 0
 	v[0][0] = bot.head.y
 	v[0][1] = bot.errDeg()
@@ -262,6 +275,7 @@ func (bot *Robot) gym(action [][]float64) ([][]float64, float64, bool) {
 	v[0][3] = leftM
 	v[0][4] = rightM
 	v[0][5] = fI
+	v[0][6] = gTime
 
 	// fmt.Println(v[0][0], v[0][1], v[0][2], v[0][3], v[0][4], v[0][5])
 
@@ -299,7 +313,8 @@ func getReward(v0, v1, v2, v3, v4, v5 float64) float64 {
 
 func (bot *Robot) envReset() [][]float64 {
 	// y-axis = 0.09733, degErr = 0, x-axis = 0, motorL = 0, motorR = 0, facing = 0
-	s := [][]float64{{0.09733, 0, 0, 0, 0, 0}}
+	s := [][]float64{{0.09733, 0, 0, 0, 0, 0, 0}}
+	gTime = 0
 
 	return s
 }
@@ -322,14 +337,13 @@ func explore(hp Hp, normalizer Normalizer, policy Policy, direction string, delt
 	for !done && numPlays < float64(hp.episodeLength) {
 		normalizer.observe(state)
 		state = normalizer.normalize(state)
-		action := policy.evaluate(state, delta, direction, hp)
-
 		fmt.Println("normalize state:", state)
-		// fmt.Println("action:", action)
+		action := policy.evaluate(state, delta, direction, hp)
+		fmt.Println("action:", action)
 
 		state, reward, done = bot.gym(action)
-		fmt.Println("state:", state)
-		fmt.Println("reward:", reward)
+		// fmt.Println("state:", state)
+		// fmt.Println("reward:", reward)
 
 		if reward < -1 {
 			reward = -1
@@ -340,7 +354,7 @@ func explore(hp Hp, normalizer Normalizer, policy Policy, direction string, delt
 		numPlays++
 		// fmt.Println("numPlays", numPlays)
 	}
-	// fmt.Println("gTime:", gTime)
+	bot.printBotCoor("coor")
 
 	return sumRewards
 }
@@ -396,8 +410,8 @@ func startAI() {
 	hp.init()
 
 	// Number of input and output depend on our own gym
-	nbInputs := 6
-	nbOutputs := 2
+	nbInputs := gInput
+	nbOutputs := gOutput
 
 	policy := Policy{}
 	// policy.init(nbInputs, nbOutputs)
