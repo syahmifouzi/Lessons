@@ -36,9 +36,12 @@ func (bot *Robot) init() {
 	(*bot).tRad = 0.02375
 	(*bot).tCir = 2 * PI * 0.02375 // 0.14923
 	(*bot).facing = 'W'
-
-	bot.printBotCoor("Initial")
-	bot.getFacingDirection()
+	(*bot).m1 = 0
+	(*bot).c1 = 0
+	(*bot).m2 = math.Inf(0)
+	(*bot).c2 = math.NaN()
+	(*bot).mpx = 0
+	(*bot).mpy = 0
 }
 
 func (bot *Robot) headPos() {
@@ -77,51 +80,61 @@ func (bot *Robot) headPos() {
 	}
 }
 
+func (bot *Robot) errDeg() float64 {
+	m := bot.m2
+	tComp := math.Abs(math.Atan(m))
+	t := (PI / 2) - tComp
+
+	return t
+	// f := bot.facing
+	// if
+}
+
 func (bot *Robot) moveBot(l, r float64) {
 	if l == r {
 		if l == 0 {
 			return
 		} else if l > 0 {
-			fmt.Println("moved W")
+			// fmt.Println("moved W")
 			bot.moveW(l)
 		} else {
-			fmt.Println("moved X")
+			// fmt.Println("moved X")
 			bot.moveX(l)
 		}
 	} else if l >= 0 && r >= 0 {
 		if l < r {
-			fmt.Println("moved Q")
+			// fmt.Println("moved Q")
 			bot.moveQ(l, r)
 		} else {
-			fmt.Println("moved E")
+			// fmt.Println("moved E")
 			bot.moveE(l, r)
 		}
 	} else if l <= 0 && r <= 0 {
 		l = math.Abs(l)
 		r = math.Abs(r)
 		if l < r {
-			fmt.Println("moved Z")
+			// fmt.Println("moved Z")
 			bot.moveZ(l, r)
 		} else {
-			fmt.Println("moved C")
+			// fmt.Println("moved C")
 			bot.moveC(l, r)
 		}
 	} else if l < 0 && r > 0 {
 		l = math.Abs(l)
 		if l < r {
-			fmt.Println("moved NQ")
+			// fmt.Println("moved NQ")
 			bot.moveNQ(l, r)
 		} else {
-			fmt.Println("moved NC")
+			// fmt.Println("moved NC")
 			bot.moveNC(l, r)
 		}
 	} else if l > 0 && r < 0 {
 		r = math.Abs(r)
 		if l > r {
-			fmt.Println("moved NE")
+			// fmt.Println("moved NE")
 			bot.moveNE(l, r)
 		} else {
-			fmt.Println("moved NZ")
+			// fmt.Println("moved NZ")
 			bot.moveNZ(l, r)
 		}
 	} else {
@@ -141,20 +154,20 @@ func (bot *Robot) moveQ(rotL, rotR float64) {
 
 	for RmL >= k {
 		//scaling down the rotation
-		fmt.Println("RmL:", RmL)
-		fmt.Println("k:", k)
-		fmt.Println("RmL is bigger than k")
-		fmt.Println("scaling down")
+		// fmt.Println("RmL:", RmL)
+		// fmt.Println("k:", k)
+		// fmt.Println("RmL is bigger than k")
+		// fmt.Println("scaling down")
 
 		rotR = rotR / 2
 		rotL = rotL / 2
 
 		RmL = rotR - rotL
-		fmt.Println("new RmL:", RmL)
+		// fmt.Println("new RmL:", RmL)
 	}
 
-	fmt.Println("proceeding...")
-	fmt.Println("")
+	// fmt.Println("proceeding...")
+	// fmt.Println("")
 
 	arcB := rotR * bot.tCir
 	// arcS := rotL * bot.tCir
@@ -164,7 +177,7 @@ func (bot *Robot) moveQ(rotL, rotR float64) {
 	rB := w / (1 - p)
 	rS := rB - w
 	// tDeg := (arcB * 360) / (2 * PI * rB) // this in degree
-	// fmt.Println("tDegree:", tDeg)
+	// // fmt.Println("tDegree:", tDeg)
 	// t := (tDeg/360) * (2*main.Pi) // convert to radian
 	t := arcB / rB         // this in radian directly
 	hS := rS * math.Sin(t) // this is y component
@@ -204,7 +217,7 @@ func (bot *Robot) moveQ(rotL, rotR float64) {
 		m := bot.m1
 		tau := math.Abs(math.Atan(m)) // tilted degree // refer diagram, the angle is the arctan angle
 		tauOp := (PI / 2) - tau       // the angle relative to hB || hS
-		// fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
+		// // fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
 		xCompNS := nS * math.Cos(tau)
 		yCompNS := nS * math.Sin(tau)
 		xCompNB := nB * math.Cos(tau)
@@ -223,7 +236,7 @@ func (bot *Robot) moveQ(rotL, rotR float64) {
 		tau := math.Abs(math.Atan(m)) // tilted degree
 		tau = (PI / 2) - tau          // refer diagram, the angle is 90 deg minus arctan angle
 		tauOp := (PI / 2) - tau
-		// fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
+		// // fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
 		yCompNS := nS * math.Cos(tau)
 		xCompNS := nS * math.Sin(tau)
 		yCompNB := nB * math.Cos(tau)
@@ -241,7 +254,7 @@ func (bot *Robot) moveQ(rotL, rotR float64) {
 		m := bot.m1
 		tau := math.Abs(math.Atan(m)) // tilted degree // refer diagram, the angle is same (Z method) as arctan angle
 		tauOp := (PI / 2) - tau
-		// fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
+		// // fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
 		xCompNS := nS * math.Cos(tau)
 		yCompNS := nS * math.Sin(tau)
 		xCompNB := nB * math.Cos(tau)
@@ -260,7 +273,7 @@ func (bot *Robot) moveQ(rotL, rotR float64) {
 		tau := math.Abs(math.Atan(m)) // tilted degree
 		tau = (PI / 2) - tau          // refer diagram, the angle is 90 deg minus arctan angle
 		tauOp := (PI / 2) - tau
-		// fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
+		// // fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
 		yCompNS := nS * math.Cos(tau)
 		xCompNS := nS * math.Sin(tau)
 		yCompNB := nB * math.Cos(tau)
@@ -295,20 +308,20 @@ func (bot *Robot) moveE(rotL, rotR float64) {
 
 	for RmL >= k {
 		//scaling down the rotation
-		fmt.Println("RmL:", RmL)
-		fmt.Println("k:", k)
-		fmt.Println("RmL is bigger than k")
-		fmt.Println("scaling down")
+		// fmt.Println("RmL:", RmL)
+		// fmt.Println("k:", k)
+		// fmt.Println("RmL is bigger than k")
+		// fmt.Println("scaling down")
 
 		rotR = rotR / 2
 		rotL = rotL / 2
 
 		RmL = rotR - rotL
-		fmt.Println("new RmL:", RmL)
+		// fmt.Println("new RmL:", RmL)
 	}
 
-	fmt.Println("proceeding...")
-	fmt.Println("")
+	// fmt.Println("proceeding...")
+	// fmt.Println("")
 
 	arcB := rotR * bot.tCir
 	// arcS := rotL * bot.tCir
@@ -318,7 +331,7 @@ func (bot *Robot) moveE(rotL, rotR float64) {
 	rB := w / (1 - p)
 	rS := rB - w
 	// tDeg := (arcB * 360) / (2 * PI * rB) // this in degree
-	// fmt.Println("tDegree:", tDeg)
+	// // fmt.Println("tDegree:", tDeg)
 	// t := (tDeg/360) * (2*main.Pi) // convert to radian
 	t := arcB / rB         // this in radian directly
 	hS := rS * math.Sin(t) // this is y component
@@ -358,7 +371,7 @@ func (bot *Robot) moveE(rotL, rotR float64) {
 		m := bot.m1
 		tau := math.Abs(math.Atan(m)) // tilted degree // refer diagram, the angle is the arctan angle
 		tauOp := (PI / 2) - tau       // the angle relative to hB || hS
-		// fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
+		// // fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
 		xCompNS := nS * math.Cos(tau)
 		yCompNS := nS * math.Sin(tau)
 		xCompNB := nB * math.Cos(tau)
@@ -377,7 +390,7 @@ func (bot *Robot) moveE(rotL, rotR float64) {
 		tau := math.Abs(math.Atan(m)) // tilted degree
 		tau = (PI / 2) - tau          // refer diagram, the angle is 90 deg minus arctan angle
 		tauOp := (PI / 2) - tau
-		// fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
+		// // fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
 		yCompNS := nS * math.Cos(tau)
 		xCompNS := nS * math.Sin(tau)
 		yCompNB := nB * math.Cos(tau)
@@ -395,7 +408,7 @@ func (bot *Robot) moveE(rotL, rotR float64) {
 		m := bot.m1
 		tau := math.Abs(math.Atan(m)) // tilted degree // refer diagram, the angle is same (Z method) as arctan angle
 		tauOp := (PI / 2) - tau
-		// fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
+		// // fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
 		xCompNS := nS * math.Cos(tau)
 		yCompNS := nS * math.Sin(tau)
 		xCompNB := nB * math.Cos(tau)
@@ -414,7 +427,7 @@ func (bot *Robot) moveE(rotL, rotR float64) {
 		tau := math.Abs(math.Atan(m)) // tilted degree
 		tau = (PI / 2) - tau          // refer diagram, the angle is 90 deg minus arctan angle
 		tauOp := (PI / 2) - tau
-		// fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
+		// // fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
 		yCompNS := nS * math.Cos(tau)
 		xCompNS := nS * math.Sin(tau)
 		yCompNB := nB * math.Cos(tau)
@@ -447,20 +460,20 @@ func (bot *Robot) moveZ(rotL, rotR float64) {
 
 	for RmL >= k {
 		//scaling down the rotation
-		fmt.Println("RmL:", RmL)
-		fmt.Println("k:", k)
-		fmt.Println("RmL is bigger than k")
-		fmt.Println("scaling down")
+		// fmt.Println("RmL:", RmL)
+		// fmt.Println("k:", k)
+		// fmt.Println("RmL is bigger than k")
+		// fmt.Println("scaling down")
 
 		rotR = rotR / 2
 		rotL = rotL / 2
 
 		RmL = rotR - rotL
-		fmt.Println("new RmL:", RmL)
+		// fmt.Println("new RmL:", RmL)
 	}
 
-	fmt.Println("proceeding...")
-	fmt.Println("")
+	// fmt.Println("proceeding...")
+	// fmt.Println("")
 
 	arcB := rotR * bot.tCir
 	// arcS := rotL * bot.tCir
@@ -509,7 +522,7 @@ func (bot *Robot) moveZ(rotL, rotR float64) {
 		m := bot.m1
 		tau := math.Abs(math.Atan(m)) // tilted degree // refer diagram, the angle is same (Z method) as arctan angle
 		tauOp := (PI / 2) - tau
-		// fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
+		// // fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
 		xCompNS := nS * math.Cos(tau)
 		yCompNS := nS * math.Sin(tau)
 		xCompNB := nB * math.Cos(tau)
@@ -528,7 +541,7 @@ func (bot *Robot) moveZ(rotL, rotR float64) {
 		tau := math.Abs(math.Atan(m)) // tilted degree
 		tau = (PI / 2) - tau          // refer diagram, the angle is 90 deg minus arctan angle
 		tauOp := (PI / 2) - tau
-		// fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
+		// // fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
 		yCompNS := nS * math.Cos(tau)
 		xCompNS := nS * math.Sin(tau)
 		yCompNB := nB * math.Cos(tau)
@@ -546,7 +559,7 @@ func (bot *Robot) moveZ(rotL, rotR float64) {
 		m := bot.m1
 		tau := math.Abs(math.Atan(m)) // tilted degree // refer diagram, the angle is the arctan angle
 		tauOp := (PI / 2) - tau       // the angle relative to hB || hS
-		// fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
+		// // fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
 		xCompNS := nS * math.Cos(tau)
 		yCompNS := nS * math.Sin(tau)
 		xCompNB := nB * math.Cos(tau)
@@ -565,7 +578,7 @@ func (bot *Robot) moveZ(rotL, rotR float64) {
 		tau := math.Abs(math.Atan(m)) // tilted degree
 		tau = (PI / 2) - tau          // refer diagram, the angle is 90 deg minus arctan angle
 		tauOp := (PI / 2) - tau
-		// fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
+		// // fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
 		yCompNS := nS * math.Cos(tau)
 		xCompNS := nS * math.Sin(tau)
 		yCompNB := nB * math.Cos(tau)
@@ -600,20 +613,20 @@ func (bot *Robot) moveC(rotL, rotR float64) {
 
 	for RmL >= k {
 		//scaling down the rotation
-		fmt.Println("RmL:", RmL)
-		fmt.Println("k:", k)
-		fmt.Println("RmL is bigger than k")
-		fmt.Println("scaling down")
+		// fmt.Println("RmL:", RmL)
+		// fmt.Println("k:", k)
+		// fmt.Println("RmL is bigger than k")
+		// fmt.Println("scaling down")
 
 		rotR = rotR / 2
 		rotL = rotL / 2
 
 		RmL = rotR - rotL
-		fmt.Println("new RmL:", RmL)
+		// fmt.Println("new RmL:", RmL)
 	}
 
-	fmt.Println("proceeding...")
-	fmt.Println("")
+	// // fmt.Println("proceeding...")
+	// // fmt.Println("")
 
 	arcB := rotR * bot.tCir
 	// arcS := rotL * bot.tCir
@@ -662,7 +675,7 @@ func (bot *Robot) moveC(rotL, rotR float64) {
 		m := bot.m1
 		tau := math.Abs(math.Atan(m)) // tilted degree // refer diagram, the angle is same (Z method) as arctan angle
 		tauOp := (PI / 2) - tau
-		// fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
+		// // fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
 		xCompNS := nS * math.Cos(tau)
 		yCompNS := nS * math.Sin(tau)
 		xCompNB := nB * math.Cos(tau)
@@ -681,7 +694,7 @@ func (bot *Robot) moveC(rotL, rotR float64) {
 		tau := math.Abs(math.Atan(m)) // tilted degree
 		tau = (PI / 2) - tau          // refer diagram, the angle is 90 deg minus arctan angle
 		tauOp := (PI / 2) - tau
-		// fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
+		// // fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
 		yCompNS := nS * math.Cos(tau)
 		xCompNS := nS * math.Sin(tau)
 		yCompNB := nB * math.Cos(tau)
@@ -699,7 +712,7 @@ func (bot *Robot) moveC(rotL, rotR float64) {
 		m := bot.m1
 		tau := math.Abs(math.Atan(m)) // tilted degree // refer diagram, the angle is the arctan angle
 		tauOp := (PI / 2) - tau       // the angle relative to hB || hS
-		// fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
+		// // fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
 		xCompNS := nS * math.Cos(tau)
 		yCompNS := nS * math.Sin(tau)
 		xCompNB := nB * math.Cos(tau)
@@ -718,7 +731,7 @@ func (bot *Robot) moveC(rotL, rotR float64) {
 		tau := math.Abs(math.Atan(m)) // tilted degree
 		tau = (PI / 2) - tau          // refer diagram, the angle is 90 deg minus arctan angle
 		tauOp := (PI / 2) - tau
-		// fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
+		// // fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
 		yCompNS := nS * math.Cos(tau)
 		xCompNS := nS * math.Sin(tau)
 		yCompNB := nB * math.Cos(tau)
@@ -747,20 +760,20 @@ func (bot *Robot) moveNQ(rotL, rotR float64) {
 
 	for RmL >= k {
 		//scaling down the rotation
-		fmt.Println("RmL:", RmL)
-		fmt.Println("k:", k)
-		fmt.Println("RmL is bigger than k")
-		fmt.Println("scaling down")
+		// // fmt.Println("RmL:", RmL)
+		// // fmt.Println("k:", k)
+		// // fmt.Println("RmL is bigger than k")
+		// // fmt.Println("scaling down")
 
 		rotR = rotR / 2
 		rotL = rotL / 2
 
 		RmL = rotR - rotL
-		fmt.Println("new RmL:", RmL)
+		// // fmt.Println("new RmL:", RmL)
 	}
 
-	fmt.Println("proceeding...")
-	fmt.Println("")
+	// // fmt.Println("proceeding...")
+	// // fmt.Println("")
 
 	arcB := rotR * bot.tCir
 	// arcS := rotL * bot.tCir
@@ -769,8 +782,8 @@ func (bot *Robot) moveNQ(rotL, rotR float64) {
 	p := rotL / rotR
 	rB := w / (p + 1)
 	rS := w - rB
-	tDeg := (arcB * 360) / (2 * PI * rB) // this in degree
-	fmt.Println("tdeg", tDeg)
+	// tDeg := (arcB * 360) / (2 * PI * rB) // this in degree
+	// // fmt.Println("tdeg", tDeg)
 	// t := (tDeg/360) * (2*main.Pi) // convert to radian
 	t := arcB / rB         // this in radian directly
 	hS := rS * math.Sin(t) // this is y component
@@ -810,7 +823,7 @@ func (bot *Robot) moveNQ(rotL, rotR float64) {
 		m := bot.m1
 		tau := math.Abs(math.Atan(m)) // tilted degree // refer diagram, the angle is the arctan angle
 		tauOp := (PI / 2) - tau       // the angle relative to hB || hS
-		// fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
+		// // fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
 		xCompNS := nS * math.Cos(tau)
 		yCompNS := nS * math.Sin(tau)
 		xCompNB := nB * math.Cos(tau)
@@ -829,7 +842,7 @@ func (bot *Robot) moveNQ(rotL, rotR float64) {
 		tau := math.Abs(math.Atan(m)) // tilted degree
 		tau = (PI / 2) - tau          // refer diagram, the angle is 90 deg minus arctan angle
 		tauOp := (PI / 2) - tau
-		// fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
+		// // fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
 		yCompNS := nS * math.Cos(tau)
 		xCompNS := nS * math.Sin(tau)
 		yCompNB := nB * math.Cos(tau)
@@ -847,7 +860,7 @@ func (bot *Robot) moveNQ(rotL, rotR float64) {
 		m := bot.m1
 		tau := math.Abs(math.Atan(m)) // tilted degree // refer diagram, the angle is same (Z method) as arctan angle
 		tauOp := (PI / 2) - tau
-		// fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
+		// // fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
 		xCompNS := nS * math.Cos(tau)
 		yCompNS := nS * math.Sin(tau)
 		xCompNB := nB * math.Cos(tau)
@@ -866,7 +879,7 @@ func (bot *Robot) moveNQ(rotL, rotR float64) {
 		tau := math.Abs(math.Atan(m)) // tilted degree
 		tau = (PI / 2) - tau          // refer diagram, the angle is 90 deg minus arctan angle
 		tauOp := (PI / 2) - tau
-		// fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
+		// // fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
 		yCompNS := nS * math.Cos(tau)
 		xCompNS := nS * math.Sin(tau)
 		yCompNB := nB * math.Cos(tau)
@@ -901,20 +914,20 @@ func (bot *Robot) moveNE(rotL, rotR float64) {
 
 	for RmL >= k {
 		//scaling down the rotation
-		fmt.Println("RmL:", RmL)
-		fmt.Println("k:", k)
-		fmt.Println("RmL is bigger than k")
-		fmt.Println("scaling down")
+		// // fmt.Println("RmL:", RmL)
+		// // fmt.Println("k:", k)
+		// // fmt.Println("RmL is bigger than k")
+		// // fmt.Println("scaling down")
 
 		rotR = rotR / 2
 		rotL = rotL / 2
 
 		RmL = rotR - rotL
-		fmt.Println("new RmL:", RmL)
+		// // fmt.Println("new RmL:", RmL)
 	}
 
-	fmt.Println("proceeding...")
-	fmt.Println("")
+	// // fmt.Println("proceeding...")
+	// // fmt.Println("")
 
 	arcB := rotR * bot.tCir
 	// arcS := rotL * bot.tCir
@@ -963,7 +976,7 @@ func (bot *Robot) moveNE(rotL, rotR float64) {
 		m := bot.m1
 		tau := math.Abs(math.Atan(m)) // tilted degree // refer diagram, the angle is the arctan angle
 		tauOp := (PI / 2) - tau       // the angle relative to hB || hS
-		// fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
+		// // fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
 		xCompNS := nS * math.Cos(tau)
 		yCompNS := nS * math.Sin(tau)
 		xCompNB := nB * math.Cos(tau)
@@ -982,7 +995,7 @@ func (bot *Robot) moveNE(rotL, rotR float64) {
 		tau := math.Abs(math.Atan(m)) // tilted degree
 		tau = (PI / 2) - tau          // refer diagram, the angle is 90 deg minus arctan angle
 		tauOp := (PI / 2) - tau
-		// fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
+		// // fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
 		yCompNS := nS * math.Cos(tau)
 		xCompNS := nS * math.Sin(tau)
 		yCompNB := nB * math.Cos(tau)
@@ -1000,7 +1013,7 @@ func (bot *Robot) moveNE(rotL, rotR float64) {
 		m := bot.m1
 		tau := math.Abs(math.Atan(m)) // tilted degree // refer diagram, the angle is same (Z method) as arctan angle
 		tauOp := (PI / 2) - tau
-		// fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
+		// // fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
 		xCompNS := nS * math.Cos(tau)
 		yCompNS := nS * math.Sin(tau)
 		xCompNB := nB * math.Cos(tau)
@@ -1019,7 +1032,7 @@ func (bot *Robot) moveNE(rotL, rotR float64) {
 		tau := math.Abs(math.Atan(m)) // tilted degree
 		tau = (PI / 2) - tau          // refer diagram, the angle is 90 deg minus arctan angle
 		tauOp := (PI / 2) - tau
-		// fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
+		// // fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
 		yCompNS := nS * math.Cos(tau)
 		xCompNS := nS * math.Sin(tau)
 		yCompNB := nB * math.Cos(tau)
@@ -1054,20 +1067,20 @@ func (bot *Robot) moveNC(rotL, rotR float64) {
 
 	for RmL >= k {
 		//scaling down the rotation
-		fmt.Println("RmL:", RmL)
-		fmt.Println("k:", k)
-		fmt.Println("RmL is bigger than k")
-		fmt.Println("scaling down")
+		// // fmt.Println("RmL:", RmL)
+		// // fmt.Println("k:", k)
+		// // fmt.Println("RmL is bigger than k")
+		// // fmt.Println("scaling down")
 
 		rotR = rotR / 2
 		rotL = rotL / 2
 
 		RmL = rotR - rotL
-		fmt.Println("new RmL:", RmL)
+		// // fmt.Println("new RmL:", RmL)
 	}
 
-	fmt.Println("proceeding...")
-	fmt.Println("")
+	// // fmt.Println("proceeding...")
+	// // fmt.Println("")
 
 	arcB := rotR * bot.tCir
 	// arcS := rotL * bot.tCir
@@ -1076,8 +1089,8 @@ func (bot *Robot) moveNC(rotL, rotR float64) {
 	p := rotL / rotR
 	rB := w / (p + 1)
 	rS := w - rB
-	tDeg := (arcB * 360) / (2 * PI * rB) // this in degree
-	fmt.Println("tdeg", tDeg)
+	// tDeg := (arcB * 360) / (2 * PI * rB) // this in degree
+	// fmt.Println("tdeg", tDeg)
 	// t := (tDeg/360) * (2*main.Pi) // convert to radian
 	t := arcB / rB         // this in radian directly
 	hS := rS * math.Sin(t) // this is y component
@@ -1117,7 +1130,7 @@ func (bot *Robot) moveNC(rotL, rotR float64) {
 		m := bot.m1
 		tau := math.Abs(math.Atan(m)) // tilted degree // refer diagram, the angle is the arctan angle
 		tauOp := (PI / 2) - tau       // the angle relative to hB || hS
-		// fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
+		// // fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
 		xCompNS := nS * math.Cos(tau)
 		yCompNS := nS * math.Sin(tau)
 		xCompNB := nB * math.Cos(tau)
@@ -1136,7 +1149,7 @@ func (bot *Robot) moveNC(rotL, rotR float64) {
 		tau := math.Abs(math.Atan(m)) // tilted degree
 		tau = (PI / 2) - tau          // refer diagram, the angle is 90 deg minus arctan angle
 		tauOp := (PI / 2) - tau
-		// fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
+		// // fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
 		yCompNS := nS * math.Cos(tau)
 		xCompNS := nS * math.Sin(tau)
 		yCompNB := nB * math.Cos(tau)
@@ -1154,7 +1167,7 @@ func (bot *Robot) moveNC(rotL, rotR float64) {
 		m := bot.m1
 		tau := math.Abs(math.Atan(m)) // tilted degree // refer diagram, the angle is same (Z method) as arctan angle
 		tauOp := (PI / 2) - tau
-		// fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
+		// // fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
 		xCompNS := nS * math.Cos(tau)
 		yCompNS := nS * math.Sin(tau)
 		xCompNB := nB * math.Cos(tau)
@@ -1173,7 +1186,7 @@ func (bot *Robot) moveNC(rotL, rotR float64) {
 		tau := math.Abs(math.Atan(m)) // tilted degree
 		tau = (PI / 2) - tau          // refer diagram, the angle is 90 deg minus arctan angle
 		tauOp := (PI / 2) - tau
-		// fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
+		// // fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
 		yCompNS := nS * math.Cos(tau)
 		xCompNS := nS * math.Sin(tau)
 		yCompNB := nB * math.Cos(tau)
@@ -1202,20 +1215,20 @@ func (bot *Robot) moveNZ(rotL, rotR float64) {
 
 	for RmL >= k {
 		//scaling down the rotation
-		fmt.Println("RmL:", RmL)
-		fmt.Println("k:", k)
-		fmt.Println("RmL is bigger than k")
-		fmt.Println("scaling down")
+		// fmt.Println("RmL:", RmL)
+		// fmt.Println("k:", k)
+		// fmt.Println("RmL is bigger than k")
+		// fmt.Println("scaling down")
 
 		rotR = rotR / 2
 		rotL = rotL / 2
 
 		RmL = rotR - rotL
-		fmt.Println("new RmL:", RmL)
+		// fmt.Println("new RmL:", RmL)
 	}
 
-	fmt.Println("proceeding...")
-	fmt.Println("")
+	// fmt.Println("proceeding...")
+	// fmt.Println("")
 
 	arcB := rotR * bot.tCir
 	// arcS := rotL * bot.tCir
@@ -1264,7 +1277,7 @@ func (bot *Robot) moveNZ(rotL, rotR float64) {
 		m := bot.m1
 		tau := math.Abs(math.Atan(m)) // tilted degree // refer diagram, the angle is the arctan angle
 		tauOp := (PI / 2) - tau       // the angle relative to hB || hS
-		// fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
+		// // fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
 		xCompNS := nS * math.Cos(tau)
 		yCompNS := nS * math.Sin(tau)
 		xCompNB := nB * math.Cos(tau)
@@ -1283,7 +1296,7 @@ func (bot *Robot) moveNZ(rotL, rotR float64) {
 		tau := math.Abs(math.Atan(m)) // tilted degree
 		tau = (PI / 2) - tau          // refer diagram, the angle is 90 deg minus arctan angle
 		tauOp := (PI / 2) - tau
-		// fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
+		// // fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
 		yCompNS := nS * math.Cos(tau)
 		xCompNS := nS * math.Sin(tau)
 		yCompNB := nB * math.Cos(tau)
@@ -1301,7 +1314,7 @@ func (bot *Robot) moveNZ(rotL, rotR float64) {
 		m := bot.m1
 		tau := math.Abs(math.Atan(m)) // tilted degree // refer diagram, the angle is same (Z method) as arctan angle
 		tauOp := (PI / 2) - tau
-		// fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
+		// // fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
 		xCompNS := nS * math.Cos(tau)
 		yCompNS := nS * math.Sin(tau)
 		xCompNB := nB * math.Cos(tau)
@@ -1320,7 +1333,7 @@ func (bot *Robot) moveNZ(rotL, rotR float64) {
 		tau := math.Abs(math.Atan(m)) // tilted degree
 		tau = (PI / 2) - tau          // refer diagram, the angle is 90 deg minus arctan angle
 		tauOp := (PI / 2) - tau
-		// fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
+		// // fmt.Println("tauOp degree:", ((tauOp / (2 * PI)) * 360))
 		yCompNS := nS * math.Cos(tau)
 		xCompNS := nS * math.Sin(tau)
 		yCompNB := nB * math.Cos(tau)
@@ -1340,8 +1353,8 @@ func (bot *Robot) moveNZ(rotL, rotR float64) {
 // Move base on Number of Tyres' rotation
 func (bot *Robot) moveW(rot float64) {
 	d := rot * bot.tCir
-	fmt.Println("Moving", d, "meters")
-	fmt.Println("")
+	// fmt.Println("Moving", d, "meters")
+	// fmt.Println("")
 	m := bot.m2
 	t := math.Abs(math.Atan(m))
 	xComp := d * (math.Cos(t))
@@ -1393,8 +1406,8 @@ func (bot *Robot) moveW(rot float64) {
 
 func (bot *Robot) moveX(rot float64) {
 	d := rot * bot.tCir
-	fmt.Println("Moving", d, "meters")
-	fmt.Println("")
+	// fmt.Println("Moving", d, "meters")
+	// fmt.Println("")
 	m := bot.m2
 	t := math.Abs(math.Atan(m))
 	xComp := d * (math.Cos(t))
@@ -1450,7 +1463,7 @@ func (bot *Robot) printBotCoor(m string) {
 	x2 := bot.rightTyre.x
 	x1 := bot.leftTyre.x
 	grad := (y2 - y1) / (x2 - x1)
-	fmt.Println(m)
+	// fmt.Println(m)
 	til := math.Atan(grad) // tilted degree
 	fmt.Printf("robot facing direction: %c\n", bot.facing)
 	fmt.Println("robot gradient:", bot.m1)
@@ -1464,22 +1477,22 @@ func (bot *Robot) printBotCoor(m string) {
 func (bot *Robot) getFacingDirection() {
 	if bot.leftTyre.y == bot.rightTyre.y {
 		if bot.leftTyre.x < bot.rightTyre.x {
-			fmt.Println("Facing W")
-			fmt.Println("-------------------------------------------")
+			// // fmt.Println("Facing W")
+			// // fmt.Println("-------------------------------------------")
 			(*bot).facing = 'W'
 		} else {
-			fmt.Println("Facing X")
-			fmt.Println("-------------------------------------------")
+			// // fmt.Println("Facing X")
+			// // fmt.Println("-------------------------------------------")
 			(*bot).facing = 'X'
 		}
 	} else if bot.leftTyre.x == bot.rightTyre.x {
 		if bot.leftTyre.y < bot.rightTyre.y {
-			fmt.Println("Facing A")
-			fmt.Println("---------------------------------------------")
+			// // fmt.Println("Facing A")
+			// // fmt.Println("---------------------------------------------")
 			(*bot).facing = 'A'
 		} else {
-			fmt.Println("Facing D")
-			fmt.Println("--------------------------------------------")
+			// // fmt.Println("Facing D")
+			// // fmt.Println("--------------------------------------------")
 			(*bot).facing = 'D'
 		}
 	} else {
@@ -1499,23 +1512,23 @@ func (bot *Robot) getGradient() {
 	if bot.leftTyre.x < bot.rightTyre.x {
 		mpxc = bot.leftTyre.x + mpxv
 		if m1 > 0 {
-			fmt.Println("Facing Q")
-			fmt.Println("----------------------------------------------------")
+			// // fmt.Println("Facing Q")
+			// // fmt.Println("----------------------------------------------------")
 			(*bot).facing = 'Q'
 		} else {
-			fmt.Println("Facing E")
-			fmt.Println("-----------------------------------------------------")
+			// // fmt.Println("Facing E")
+			// // fmt.Println("-----------------------------------------------------")
 			(*bot).facing = 'E'
 		}
 	} else {
 		mpxc = bot.rightTyre.x + mpxv
 		if m1 > 0 {
-			fmt.Println("Facing C")
-			fmt.Println("------------------------------------------------------")
+			// // fmt.Println("Facing C")
+			// // fmt.Println("------------------------------------------------------")
 			(*bot).facing = 'C'
 		} else {
-			fmt.Println("Facing Z")
-			fmt.Println("-------------------------------------------------------")
+			// // fmt.Println("Facing Z")
+			// // fmt.Println("-------------------------------------------------------")
 			(*bot).facing = 'Z'
 		}
 	}
@@ -1529,7 +1542,7 @@ func (bot *Robot) getGradient() {
 	m2 := (-1) / m1
 	c2 := mpyc - (m2 * mpxc)
 
-	// fmt.Println("update m1:", m1)
+	// // fmt.Println("update m1:", m1)
 	(*bot).m1 = m1
 	(*bot).c1 = c1
 	(*bot).m2 = m2
@@ -1547,22 +1560,24 @@ func main() {
 	fmt.Println("----------------------------------------------")
 	fmt.Println("")
 
-	bot := Robot{}
-	bot.init()
+	startAI()
 
-	// bot.moveBot(0.407894737, 1.052631579)
-	// bot.moveBot(0.444739, -0.2)
+	// bot := Robot{}
+	// bot.init()
 
-	bot.moveBot(1.052631579, 0.407894737)
-	bot.moveBot(1.052631579, 0.407894737)
-	bot.moveBot(1.052631579, 0.407894737)
-	bot.moveBot(1.052631579, 0.407894737)
-	bot.moveBot(1.052631579, 0.407894737)
-	bot.moveBot(1.052631579, 0.407894737)
-	bot.moveBot(1.052631579, 0.407894737)
-	bot.moveBot(1.052631579, 0.407894737)
+	// // bot.moveBot(0.407894737, 1.052631579)
+	// // bot.moveBot(0.444739, -0.2)
 
-	bot.printBotCoor("moved bot")
+	// bot.moveBot(1.052631579, 0.407894737)
+	// bot.moveBot(1.052631579, 0.407894737)
+	// bot.moveBot(1.052631579, 0.407894737)
+	// bot.moveBot(1.052631579, 0.407894737)
+	// bot.moveBot(1.052631579, 0.407894737)
+	// bot.moveBot(1.052631579, 0.407894737)
+	// bot.moveBot(1.052631579, 0.407894737)
+	// bot.moveBot(1.052631579, 0.407894737)
+
+	// bot.printBotCoor("moved bot")
 
 	fmt.Println("")
 	fmt.Println("----------------------------------------------")
