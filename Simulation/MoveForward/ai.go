@@ -11,7 +11,6 @@ import (
 	"os"
 	"sort"
 	"strconv"
-	"time"
 
 	"gonum.org/v1/gonum/stat"
 )
@@ -34,6 +33,9 @@ https://towardsdatascience.com/openai-gym-from-scratch-619e39af121f
 set proportinality to determine a good/bad reward
 
 */
+
+// IMPORTANT PARAMETER FOR MODEL USCH AS:
+// episodeLength, nbDirection, nbBestDirection, reward tolerance, constant rand number (for debugging), goal/done
 
 var memo MemoryInit
 var thetaToWrite [][]float64
@@ -80,11 +82,11 @@ type env struct {
 }
 
 func (hp *Hp) init() {
-	(*hp).nbSteps = 100
-	// this part (episode length) is very crucial and will determine the model is working or not (must tally with "robot goal/done" @below function) (or maybe not)
-	(*hp).episodeLength = 90000
-	(*hp).nbDirections = 64
-	(*hp).nbBestDirections = 64
+	(*hp).nbSteps = 1000
+	// this part (episode length & direction) is very crucial and will determine the model is working or not (must tally with "robot goal/done" @below function) (or maybe not)
+	(*hp).episodeLength = 1000000
+	(*hp).nbDirections = 16
+	(*hp).nbBestDirections = 16
 	(*hp).learningRate = 0.02
 	(*hp).noise = 0.03
 }
@@ -309,7 +311,7 @@ func getReward(v0, v1, v2, v3, v4, v5, v6 float64) float64 {
 	e6 = v6
 
 	// the Tolerant of the reward is very important as well to determine the working model
-	reward = (4 * 25) - (6 * e0) - (5 * e1) - (4 * e2) - (3 * e3) - (3 * e4) - (2 * e5) - (2 * e6)
+	reward = (5 * 25) - (6 * e0) - (5 * e1) - (4 * e2) - (3 * e3) - (3 * e4) - (2 * e5) - (2 * e6)
 
 	return reward
 }
@@ -585,9 +587,9 @@ func randomizeValue(r int, c int) [][]float64 {
 	// or use crypto/rand for more secure way
 	// https://gobyexample.com/random-numbers
 	// so that we would get different output each time
-	rand.Seed(time.Now().UnixNano())
-	// OR WE CAN JUST CONSTANT IT FOR NOW!
-	// rand.Seed(0)
+	// rand.Seed(time.Now().UnixNano())
+	// OR WE CAN JUST CONSTANT IT TO CHECK IF THE MODEL IS WORKING!
+	rand.Seed(0)
 
 	v := make([][]float64, r)
 	for i := 0; i < r; i++ {
