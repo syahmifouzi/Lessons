@@ -137,7 +137,7 @@ func (p *Policy) init2(inputSize, outputSize int) {
 func (p *Policy) evaluate(input, delta [][]float64, direction string, hp Hp) [][]float64 {
 	switch direction {
 	case "none":
-		fmt.Println("none")
+		fmt.Println("NONE")
 		// fmt.Println("input", input)
 		// fmt.Println("theta", (*p).theta)
 		return dot(input, transpose((*p).theta))
