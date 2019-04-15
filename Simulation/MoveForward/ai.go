@@ -44,7 +44,7 @@ var meanToWrite [][]float64
 var meanDiffToWrite [][]float64
 var varianceToWrite [][]float64
 
-var gInput = 3
+var gInput = 7
 var gOutput = 2
 var gBot Robot
 
@@ -86,8 +86,8 @@ func (hp *Hp) init() {
 	(*hp).nbSteps = 10000
 	// this part (episode length & direction) is very crucial and will determine the model is working or not (must tally with "robot goal/done" @below function) (or maybe not)
 	(*hp).episodeLength = 10000
-	(*hp).nbDirections = 64
-	(*hp).nbBestDirections = 64
+	(*hp).nbDirections = 128
+	(*hp).nbBestDirections = 128
 	(*hp).learningRate = 0.02
 	(*hp).noise = 0.03
 }
@@ -235,7 +235,7 @@ func readIn() float64 {
 	return s
 }
 
-func (bot *Robot) gym(action [][]float64, gT float64) ([][]float64, float64, bool) {
+func (bot *Robot) gym(action [][]float64, gT, tMax float64) ([][]float64, float64, bool) {
 	// to compile the state into array later
 	r := 1
 	c := gInput
@@ -247,50 +247,70 @@ func (bot *Robot) gym(action [][]float64, gT float64) ([][]float64, float64, boo
 	leftM := action[0][0]
 	rightM := action[0][1]
 
+	// fmt.Println("action:", action)
+
 	bot.moveBot(leftM, rightM)
 
+	// bot.printBotCoor("gym")
+	// fmt.Println("degree of errorness:", bot.errDeg())
+
+	// time.Sleep(1 * time.Second)
+
+	botErr := 0.0
 	f := bot.facing
 	fI := 0.0
 	switch f {
 	case 'Q':
 		fI = 1
+		botErr = bot.errDeg()
 	case 'W':
 		fI = 0
 	case 'E':
 		fI = 1
+		botErr = bot.errDeg()
 	case 'D':
 		fI = 2
+		botErr = PI / 2
 	case 'C':
 		fI = 3
+		botErr = PI - bot.errDeg()
 	case 'X':
 		fI = 4
+		botErr = PI
 	case 'Z':
 		fI = 3
+		botErr = PI - bot.errDeg()
 	case 'A':
 		fI = 2
+		botErr = PI / 2
 	}
 
 	// y-axis = 0.09733, degErr = 0, x-axis = 0, motorL = 0, motorR = 0, facing = 0
 	v[0][0] = bot.head.y
-	v[0][1] = bot.head.x
-	v[0][2] = gT
-	// v[0][3] = leftM
-	// v[0][4] = rightM
-	// v[0][5] = fI
-	// v[0][6] = bot.errDeg()
+	v[0][1] = botErr
+	v[0][2] = bot.head.x
+	v[0][3] = fI
+	v[0][4] = gT
+	v[0][5] = leftM
+	v[0][6] = rightM
 
 	// fmt.Println(v[0][0], v[0][1], v[0][2], v[0][3], v[0][4], v[0][5])
 
 	// Then decide the rewards
-	reward := getReward(bot.head.y, bot.errDeg(), bot.head.x, fI, gT)
+	reward := getReward(bot.head.y, botErr, bot.head.x, fI, gT, leftM, rightM, tMax)
 	// it is hard to reach 900
 
 	// Decide if it is done
 	done := false
 
+	// if botErr > PI/2 {
+	// 	fmt.Println("Should be done")
+	// }
+
 	// this part ("done" AKA. "robot goal") is very crucial and will determine the model is working or not
-	if math.Abs(bot.head.y) > 5 || math.Abs(bot.head.x) > 5 {
+	if math.Abs(bot.head.y) > 0.9 || math.Abs(bot.head.x) > 0.9 || botErr > PI/2 {
 		// fmt.Println("done1:", v[0][0], "done2:", v[0][2])
+		// fmt.Println("done err:", botErr)
 		done = true
 	}
 	// fmt.Println("reward:", reward)
@@ -298,20 +318,22 @@ func (bot *Robot) gym(action [][]float64, gT float64) ([][]float64, float64, boo
 	return v, reward, done
 }
 
-func getReward(v0, v1, v2, v3, v4 float64) float64 {
+func getReward(v0, v1, v2, v3, v4, v5, v6, tMax float64) float64 {
 
-	var reward, e0, e1, e2, e3, e4 float64
+	var reward, e0, e1, e2, e3, e4, e5, e6 float64
 
 	//eq. v0 || y-axis
-	e0 = -v0 + 100
-	e1 = v1
-	e2 = math.Abs(v2)
-	e3 = v3
-	e4 = v4
+	e0 = math.Abs((v0 - 0.9) / 0.9)
+	e1 = math.Abs(v1 / (PI / 2))
+	e2 = math.Abs(v2 / 0.9)
+	e3 = math.Abs(v3 / 4)
+	e4 = math.Abs(v4 / tMax)
+	e5 = math.Abs((v5 - 1) / 1)
+	e6 = math.Abs((v6 - 1) / 1)
 
 	// the Tolerant of the reward is very important as well to determine the working model
 	// Reward ak sebelum ni tggi sgt (either -ve nye / +ve?)
-	reward = (20 * 20) - (0.5 * e0) - (0.4 * e1) - (0.3 * e2) - (0.2 * e3) - (0.1 * e4)
+	reward = 1 - (1 * e0) - (1 * e1) - (1 * e2) - (0.1 * e5) - (0.1 * e6) - (0.1 * e3) - (0.1 * e4)
 
 	return reward
 }
@@ -319,7 +341,7 @@ func getReward(v0, v1, v2, v3, v4 float64) float64 {
 func (bot *Robot) envReset() [][]float64 {
 	// y-axis = 0.09733, degErr = 0, x-axis = 0, motorL = 0, motorR = 0, facing = 0
 	bot.init()
-	s := [][]float64{{bot.head.y, bot.head.x, 0}}
+	s := [][]float64{{bot.head.y, bot.errDeg(), bot.head.x, 0, 0, 0, 0}}
 
 	return s
 }
@@ -348,7 +370,7 @@ func explore(hp Hp, normalizer Normalizer, policy Policy, direction string, delt
 		action := policy.evaluate(state, delta, direction, hp)
 		// fmt.Println("action:", action)
 
-		state, reward, done = bot.gym(action, numPlays)
+		state, reward, done = bot.gym(action, numPlays, float64(hp.episodeLength))
 		// fmt.Println("state:", state)
 		// fmt.Println("reward:", reward)
 
@@ -407,7 +429,7 @@ func train(hp Hp, p Policy, normalizer Normalizer, inputSize, outputSize int) {
 
 		// Printing the final reward of the policy after the update
 		rewardEvaluation := explore(hp, normalizer, p, "none", deltas[0])
-		gBot.printBotCoor("coor")
+		// gBot.printBotCoor("coor")
 		fmt.Println("Step:", step, "Rewards:", rewardEvaluation)
 	}
 }
