@@ -1803,8 +1803,8 @@ func main() {
 	fmt.Println("----------------------------------------------")
 	fmt.Println("")
 
-	// startAI()
-	testMAPPING()
+	startAI()
+	// testMAPPING()
 
 	// bot := Robot{}
 	// bot.init()

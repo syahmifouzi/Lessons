@@ -44,11 +44,12 @@ var meanToWrite [][]float64
 var meanDiffToWrite [][]float64
 var varianceToWrite [][]float64
 
-var gInput = 7
+var gInput = 8
 var gOutput = 2
 var gBot Robot
 var gLastML float64
 var gLastMR float64
+var limitStep int32
 
 // MemoryInit ...
 type MemoryInit struct {
@@ -85,7 +86,7 @@ type env struct {
 }
 
 func (hp *Hp) init() {
-	(*hp).nbSteps = 1000
+	(*hp).nbSteps = 10000
 	// this part (episode length & direction) is very crucial and will determine the model is working or not (must tally with "robot goal/done" @below function) (or maybe not)
 	// just experiment with any possible number
 	(*hp).episodeLength = 100000
@@ -261,48 +262,20 @@ func (bot *Robot) gym(action [][]float64, t float64) ([][]float64, float64, bool
 
 	// time.Sleep(1 * time.Second)
 
-	botErr := 0.0
-	f := bot.facing
-	fI := 0.0
-	switch f {
-	case 'Q':
-		fI = 1
-		botErr = bot.errDeg()
-	case 'W':
-		fI = 0
-	case 'E':
-		fI = 1
-		botErr = bot.errDeg()
-	case 'D':
-		fI = 2
-		botErr = PI / 2
-	case 'C':
-		fI = 3
-		botErr = PI - bot.errDeg()
-	case 'X':
-		fI = 4
-		botErr = PI
-	case 'Z':
-		fI = 3
-		botErr = PI - bot.errDeg()
-	case 'A':
-		fI = 2
-		botErr = PI / 2
-	}
-
 	// y-axis = 0.09733, degErr = 0, x-axis = 0, motorL = 0, motorR = 0, facing = 0
-	v[0][0] = bot.head.y
-	v[0][1] = bot.head.x
-	v[0][2] = botErr
-	v[0][3] = leftM
-	v[0][4] = rightM
-	v[0][5] = fI
-	v[0][6] = rand.Float64() / 1000 // small small noise
+	v[0][0] = isSenOnline(bot.sensor[0])
+	v[0][1] = isSenOnline(bot.sensor[1])
+	v[0][2] = isSenOnline(bot.sensor[2])
+	v[0][3] = isSenOnline(bot.sensor[3])
+	v[0][4] = isSenOnline(bot.sensor[4])
+	v[0][5] = isSenOnline(bot.sensor[5])
+	v[0][6] = isSenOnline(bot.sensor[6])
+	v[0][7] = rand.Float64() / 1000
 
 	// fmt.Println(v[0][0], v[0][1], v[0][2], v[0][3], v[0][4], v[0][5])
 
 	// Then decide the rewards
-	reward := getReward(bot.head.y, bot.head.x, botErr, leftM, rightM, fI, t)
+	reward := getReward(v[0])
 	// it is hard to reach 900
 
 	// Decide if it is done
@@ -314,42 +287,33 @@ func (bot *Robot) gym(action [][]float64, t float64) ([][]float64, float64, bool
 
 	// this part ("done" AKA. "robot goal") is very crucial and will determine the model is working or not
 	// if change this value, need to change the Fy and Fx reward function
-	if math.Abs(bot.head.y) > 10 || math.Abs(bot.head.x) > 3 {
-		// fmt.Println("trial:", t)
-		// fmt.Println("done err Y:", bot.head.y)
-		// fmt.Println("done err X:", bot.head.x)
-		// time.Sleep(1 * time.Second)
+	if limitStep > 1000 {
 		done = true
+		limitStep = 0
 	}
+
+	reward = reward - math.Abs(leftM-rightM)
 	// fmt.Println("reward:", reward)
 
 	return v, reward, done
 }
 
-func getReward(v0, v1, v2, v3, v4, v5, t float64) float64 {
+func getReward(v []float64) float64 {
 
-	// dY := (v0 - 0.09733) / t
+	reward := 0.0
 
-	// Fdy := rewSig(1, 7, dY, 0.7, 0.9)
-	// if Fy and Fx value, need to change the Environment limit as well (done = true)
-	Fy := rewSig(2, 0.1, v0, 15, 1)
-	Fx := rewGaus(1.7, v1, 0, 0.3, 0.9)
-	Fde := rewGaus(1.7, v2, 0, 0.3, 0.9)
-	Fml := rewSig(0.9, 9, v3, 0.7, -0.1)
-	Fmr := rewSig(0.9, 9, v4, 0.7, -0.1)
-	Ff := rewGaus(1.7, v5, 0, 1.1, 0.9)
-
-	reward := 2*Fy + Fx + Fde + Fml + Fmr + Ff
-
-	// fmt.Println("Fdy:", 5*Fdy)
-	// fmt.Println("Fy:", Fy)
-	// fmt.Println("Fx:", Fx)
-	// fmt.Println("Fde:", Fde)
-	// fmt.Println("Fml:", Fml)
-	// fmt.Println("Fmr:", Fmr)
-	// fmt.Println("Ff:", Ff)
-	// time.Sleep(2 * time.Second)
-	// fmt.Println("reward mini:", reward)
+	if v[3] == 1 {
+		reward = 1
+	} else if v[2] == 1 || v[4] == 1 {
+		reward = -0.3
+	} else if v[1] == 1 || v[5] == 1 {
+		reward = -0.5
+	} else if v[0] == 1 || v[6] == 1 {
+		reward = -0.9
+	} else {
+		reward = -1
+		limitStep++
+	}
 
 	return reward
 }
@@ -365,8 +329,9 @@ func rewGaus(a, x, b, c, K0 float64) float64 {
 func (bot *Robot) envReset() [][]float64 {
 	// y-axis = 0.09733, degErr = 0, x-axis = 0, motorL = 0, motorR = 0, facing = 0
 	bot.init()
-	bot.moveBot(0.6, 0.5)
-	s := [][]float64{{isSenOnline(bot.sensor[0]), isSenOnline(bot.sensor[1]), isSenOnline(bot.sensor[2]), isSenOnline(bot.sensor[3]), isSenOnline(bot.sensor[4]), isSenOnline(bot.sensor[5]), isSenOnline(bot.sensor[6])}}
+	limitStep = 0
+	// bot.moveBot(0.6, 0.5)
+	s := [][]float64{{isSenOnline(bot.sensor[0]), isSenOnline(bot.sensor[1]), isSenOnline(bot.sensor[2]), isSenOnline(bot.sensor[3]), isSenOnline(bot.sensor[4]), isSenOnline(bot.sensor[5]), isSenOnline(bot.sensor[6]), 0}}
 	// s := [][]float64{{bot.head.y, bot.head.x, bot.errDeg(), 0, 0, 0, 0}}
 
 	return s
