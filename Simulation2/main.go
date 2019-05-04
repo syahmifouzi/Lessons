@@ -1773,18 +1773,25 @@ func (r *MMap) initMap() {
 	r.r4.d.y = 0
 }
 
+func isSenOnline(s Coor) float64 {
+	m := MMap{}
+	m.initMap()
+
+	if isOnLine(s, m.r1) || isOnLine(s, m.r2) || isOnLine(s, m.r3) || isOnLine(s, m.r4) {
+		return 1
+	}
+
+	return 0
+}
+
 func testMAPPING() {
 	bot := Robot{}
 	bot.init()
 
-	m := MMap{}
-	m.initMap()
+	bot.moveBot(0.6, 0.5)
+	s := [][]float64{{isSenOnline(bot.sensor[0]), isSenOnline(bot.sensor[1]), isSenOnline(bot.sensor[2]), isSenOnline(bot.sensor[3]), isSenOnline(bot.sensor[4]), isSenOnline(bot.sensor[5]), isSenOnline(bot.sensor[6])}}
+	fmt.Println("s:", s)
 
-	for i := 0; i < 7; i++ {
-		if isOnLine(bot.sensor[i], m.r1) || isOnLine(bot.sensor[i], m.r2) || isOnLine(bot.sensor[i], m.r3) || isOnLine(bot.sensor[i], m.r4) {
-			fmt.Println("sensor", i, "is online")
-		}
-	}
 }
 
 // ----------------------------------------------------------

@@ -85,7 +85,7 @@ type env struct {
 }
 
 func (hp *Hp) init() {
-	(*hp).nbSteps = 100000
+	(*hp).nbSteps = 1000
 	// this part (episode length & direction) is very crucial and will determine the model is working or not (must tally with "robot goal/done" @below function) (or maybe not)
 	// just experiment with any possible number
 	(*hp).episodeLength = 100000
@@ -365,8 +365,8 @@ func rewGaus(a, x, b, c, K0 float64) float64 {
 func (bot *Robot) envReset() [][]float64 {
 	// y-axis = 0.09733, degErr = 0, x-axis = 0, motorL = 0, motorR = 0, facing = 0
 	bot.init()
-	bot.moveBot(0.9, 0.5)
-	s := [][]float64{{bot.head.y, bot.head.x, bot.errDeg(), 0.9, 0.5, 1, 0}}
+	bot.moveBot(0.6, 0.5)
+	s := [][]float64{{isSenOnline(bot.sensor[0]), isSenOnline(bot.sensor[1]), isSenOnline(bot.sensor[2]), isSenOnline(bot.sensor[3]), isSenOnline(bot.sensor[4]), isSenOnline(bot.sensor[5]), isSenOnline(bot.sensor[6])}}
 	// s := [][]float64{{bot.head.y, bot.head.x, bot.errDeg(), 0, 0, 0, 0}}
 
 	return s
