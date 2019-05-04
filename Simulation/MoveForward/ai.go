@@ -85,7 +85,7 @@ type env struct {
 }
 
 func (hp *Hp) init() {
-	(*hp).nbSteps = 100000
+	(*hp).nbSteps = 1000
 	// this part (episode length & direction) is very crucial and will determine the model is working or not (must tally with "robot goal/done" @below function) (or maybe not)
 	// just experiment with any possible number
 	(*hp).episodeLength = 100000
@@ -339,7 +339,7 @@ func getReward(v0, v1, v2, v3, v4, v5, t float64) float64 {
 	Fmr := rewSig(0.9, 9, v4, 0.7, -0.1)
 	Ff := rewGaus(1.7, v5, 0, 1.1, 0.9)
 
-	reward := 2*Fy + Fx + Fde + Fml + Fmr + Ff
+	reward := 2*Fy + Fx + Fde + Fml + Fmr + Ff - (v3 - v4)
 
 	// fmt.Println("Fdy:", 5*Fdy)
 	// fmt.Println("Fy:", Fy)
