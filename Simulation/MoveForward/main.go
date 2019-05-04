@@ -139,6 +139,8 @@ func (bot *Robot) moveBot(l, r float64) {
 		}
 	} else {
 		fmt.Println("Unknown rotational: at bot.moveBot()")
+		fmt.Println("Left Motor:", l)
+		fmt.Println("Right Motor:", r)
 	}
 }
 
@@ -1564,6 +1566,10 @@ func main() {
 
 	// bot := Robot{}
 	// bot.init()
+
+	// for i := 0; i < 1000; i++ {
+	// 	bot.moveBot(1, 1)
+	// }
 
 	// // bot.moveBot(0.407894737, 1.052631579)
 	// // bot.moveBot(0.444739, -0.2)
