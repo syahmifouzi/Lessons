@@ -2,12 +2,8 @@ package main
 
 import (
 	"fmt"
-	"math"
 	"time"
 )
-
-// PI of math
-const PI float64 = math.Pi
 
 // Wheel ...
 type Wheel struct {
