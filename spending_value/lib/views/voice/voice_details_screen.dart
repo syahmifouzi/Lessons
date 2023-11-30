@@ -1,9 +1,10 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
 import 'package:flutter/material.dart';
-import 'package:just_audio/just_audio.dart';
+import 'package:flutter/services.dart';
 import 'package:provider/provider.dart';
 import 'package:spending_value/controllers/audio_store.dart';
+import 'package:spending_value/controllers/surahname_store.dart';
 
 class VoiceDetailsScreen extends StatefulWidget {
   const VoiceDetailsScreen({super.key});
@@ -13,15 +14,29 @@ class VoiceDetailsScreen extends StatefulWidget {
 }
 
 class _VoiceDetailsScreenState extends State<VoiceDetailsScreen> {
-  final _formKey = GlobalKey<FormState>();
+  // final _formKey = GlobalKey<FormState>();
   late AudioDbDoc _audiodata;
   late AudioStore _ctxDispose;
+
+  final TextEditingController _controllerTitle = TextEditingController();
+  final TextEditingController _controllerSurah = TextEditingController();
+  final TextEditingController _controllerAyatStart = TextEditingController();
+  final TextEditingController _controllerAyatEnd = TextEditingController();
+  final TextEditingController _controllerStatus = TextEditingController();
+  final SearchController _controllerSearch = SearchController();
 
   @override
   void initState() {
     super.initState();
+    context.read<SurahnameStore>().getSurahListName();
     _audiodata = context.read<AudioStore>().audioDetails;
     context.read<AudioStore>().setinit();
+    _controllerTitle.text = _audiodata.title;
+    _controllerSurah.text = _audiodata.surah;
+    _controllerAyatStart.text = _audiodata.ayatStart;
+    _controllerAyatEnd.text = _audiodata.ayatEnd;
+    _controllerStatus.text = _audiodata.status;
+    _controllerSearch.text = _audiodata.surah;
   }
 
   @override
@@ -43,119 +58,222 @@ class _VoiceDetailsScreenState extends State<VoiceDetailsScreen> {
         title: Text(_audiodata.title),
         actions: [
           TextButton(
-              onPressed: () => renameDialog(_audiodata.title),
-              child: Text("Rename")),
-          TextButton(onPressed: () => onDelete(), child: Text("Delete"))
+              onPressed: () => onRenameSave(_audiodata.id),
+              child: const Text("Save")),
+          TextButton(onPressed: () => onDelete(), child: const Text("Delete"))
         ],
         elevation: 1,
       ),
-      body: Column(
-        children: [
-          // playerContainer(),
-          Row(
-            children: [
-              SizedBox(
-                width: 8,
-              ),
-              Text(context.watch<AudioStore>().getPositionLabel()),
-              Expanded(
-                child: Consumer<AudioStore>(
-                  builder: (context, store, child) {
-                    return Slider(
-                        min: 0,
-                        max: store.getTotalDurationMs(),
-                        value: store.getPositionMs(),
-                        secondaryTrackValue: store.getBufferedPositionMs(),
-                        label: store.getPositionMs().toString(),
-                        onChanged: ((value) {
-                          store.setSeekMs(value);
-                          // setState(() {
-                          //   _sliderPrimaryValue = value;
-                          // });
-                        }));
-                  },
+      body: SingleChildScrollView(
+        child: Column(
+          children: [
+            // playerContainer(),
+            Row(
+              children: [
+                const SizedBox(
+                  width: 8,
                 ),
-              ),
-              Text(context.watch<AudioStore>().getTotalDurationLabel()),
-              SizedBox(
-                width: 8,
-              ),
-            ],
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-            children: [
-              ElevatedButton(
-                  onPressed: () => context.read<AudioStore>().setPlay(),
-                  child: Text("Play")),
-              ElevatedButton(
-                  onPressed: () => context.read<AudioStore>().setStop(),
-                  child: Text("Stop")),
-            ],
-          ),
-        ],
+                Text(context.watch<AudioStore>().getPositionLabel()),
+                Expanded(
+                  child: Consumer<AudioStore>(
+                    builder: (context, store, child) {
+                      return Slider(
+                          min: 0,
+                          max: store.getTotalDurationMs(),
+                          value: store.getPositionMs(),
+                          secondaryTrackValue: store.getBufferedPositionMs(),
+                          label: store.getPositionMs().toString(),
+                          onChanged: ((value) {
+                            store.setSeekMs(value);
+                            // setState(() {
+                            //   _sliderPrimaryValue = value;
+                            // });
+                          }));
+                    },
+                  ),
+                ),
+                Text(context.watch<AudioStore>().getTotalDurationLabel()),
+                const SizedBox(
+                  width: 8,
+                ),
+              ],
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                ElevatedButton(
+                    onPressed: () => context.read<AudioStore>().setPlay(),
+                    child: const Text("Play")),
+                ElevatedButton(
+                    onPressed: () => context.read<AudioStore>().setPause(),
+                    child: const Text("Pause")),
+                ElevatedButton(
+                    onPressed: () => context.read<AudioStore>().setStop(),
+                    child: const Text("Stop")),
+              ],
+            ),
+
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: TextField(
+                  controller: _controllerTitle,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: 'Title',
+                  )),
+            ),
+            Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: TextField(
+                  controller: _controllerStatus,
+                  decoration: const InputDecoration(
+                    border: OutlineInputBorder(),
+                    labelText: 'Status',
+                  )),
+            ),
+            Consumer<SurahnameStore>(
+              builder: (context, store, child) {
+                return SearchAnchor.bar(
+                  searchController: _controllerSearch,
+                  // isFullScreen: false,
+                  barLeading: const SizedBox(),
+                  barHintText: "Surah",
+                  barBackgroundColor:
+                      const MaterialStatePropertyAll(Colors.white),
+                  viewHintText: "Surah",
+                  viewBackgroundColor: Colors.white,
+                  viewTrailing: [
+                    TextButton(
+                        onPressed: () => addNewSurah(_controllerSearch.text),
+                        child: const Text("Add New"))
+                  ],
+                  suggestionsBuilder:
+                      (BuildContext context, SearchController controller) {
+                    store.runFilter(controller.text);
+                    return store.filteredListName
+                        .map((e) => ListTile(
+                              title: Text(e.name),
+                              trailing: IconButton(
+                                  onPressed: () => removeSurah(e.id),
+                                  icon: const Icon(Icons.cancel_outlined)),
+                              onTap: () {
+                                _controllerSurah.text = e.name;
+                                setState(() {
+                                  controller.closeView(e.name);
+                                });
+                              },
+                            ))
+                        .toList();
+                  },
+                );
+              },
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+              children: [
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: TextField(
+                        controller: _controllerAyatStart,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(RegExp(r'\d*')),
+                        ],
+                        decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                          labelText: 'Ayat Start',
+                        )),
+                  ),
+                ),
+                Expanded(
+                  child: Padding(
+                    padding: const EdgeInsets.all(8.0),
+                    child: TextField(
+                        controller: _controllerAyatEnd,
+                        keyboardType: TextInputType.number,
+                        inputFormatters: [
+                          FilteringTextInputFormatter.allow(RegExp(r'\d*')),
+                        ],
+                        decoration: const InputDecoration(
+                          border: OutlineInputBorder(),
+                          labelText: 'Ayat End',
+                        )),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  void onRenameSave(String id, String title) async {
+  void onRenameSave(String id) async {
+    final audioDB = {
+      "title": _controllerTitle.text,
+      "ayatStart": _controllerAyatStart.text,
+      "ayatEnd": _controllerAyatEnd.text,
+      "status": _controllerStatus.text,
+      "surah": _controllerSurah.text,
+    };
     final db = FirebaseFirestore.instance;
     final dbRef = db.collection("audio").doc(id);
     try {
-      await dbRef.update({"title": title});
+      await dbRef.update(audioDB);
       print('Success update doc');
     } catch (e) {
       print('Error updating doc: $e');
     }
   }
 
-  Future<String> renameDialog(String oldTitle) async {
-    TextEditingController controllerTitle = TextEditingController();
-    controllerTitle.text = oldTitle;
-    final result = await showDialog(
-        context: context,
-        builder: (context) => AlertDialog(
-              title: Text("Rename Title"),
-              content: Form(
-                key: _formKey,
-                child: TextFormField(
-                    controller: controllerTitle,
-                    decoration: const InputDecoration(
-                      border: OutlineInputBorder(),
-                      labelText: 'Title',
-                    ),
-                    validator: (value) {
-                      if (value == null || value.isEmpty) {
-                        return "Please enter a title";
-                      }
-                      return null;
-                    }),
-              ),
-              actions: [
-                TextButton(
-                    onPressed: () => Navigator.pop(context, 'Cancel'),
-                    child: Text('Cancel')),
-                TextButton(
-                    onPressed: () {
-                      if (_formKey.currentState!.validate()) {
-                        Navigator.pop(context, controllerTitle.text);
-                      }
-                    },
-                    child: Text('Save')),
-              ],
-            ));
+  // Future<String> renameDialog(String oldTitle) async {
+  //   TextEditingController controllerTitle = TextEditingController();
+  //   controllerTitle.text = oldTitle;
+  //   final result = await showDialog(
+  //       context: context,
+  //       builder: (context) => AlertDialog(
+  //             title: const Text("Rename Title"),
+  //             content: Form(
+  //               key: _formKey,
+  //               child: TextFormField(
+  //                   controller: controllerTitle,
+  //                   decoration: const InputDecoration(
+  //                     border: OutlineInputBorder(),
+  //                     labelText: 'Title',
+  //                   ),
+  //                   validator: (value) {
+  //                     if (value == null || value.isEmpty) {
+  //                       return "Please enter a title";
+  //                     }
+  //                     return null;
+  //                   }),
+  //             ),
+  //             actions: [
+  //               TextButton(
+  //                   onPressed: () => Navigator.pop(context, 'Cancel'),
+  //                   child: const Text('Cancel')),
+  //               TextButton(
+  //                   onPressed: () {
+  //                     if (_formKey.currentState!.validate()) {
+  //                       Navigator.pop(context, controllerTitle.text);
+  //                     }
+  //                   },
+  //                   child: const Text('Save')),
+  //             ],
+  //           ));
 
-    if (result == "Cancel" || result == null) {
-      return result ?? "Error";
-    }
+  //   if (result == "Cancel" || result == null) {
+  //     return result ?? "Error";
+  //   }
 
-    setState(() {
-      _audiodata.title = result;
-    });
-    onRenameSave(_audiodata.id, _audiodata.title);
+  //   setState(() {
+  //     _audiodata.title = result;
+  //   });
+  //   onRenameSave(_audiodata.id, _audiodata.title);
 
-    return result;
-  }
+  //   return result;
+  // }
 
   void onDelete() async {
     bool? confirmDelete = await confirmDeleteDialog(_audiodata.title);
@@ -188,18 +306,31 @@ class _VoiceDetailsScreenState extends State<VoiceDetailsScreen> {
         context: context,
         builder: (context) => AlertDialog(
               title: Text("Confirm Delete $title?"),
-              content: Text("Action is irreversible"),
+              content: const Text("Action is irreversible"),
               actions: [
                 TextButton(
                     onPressed: () => Navigator.pop(context, false),
-                    child: Text('Cancel')),
+                    child: const Text('Cancel')),
                 TextButton(
                     onPressed: () => Navigator.pop(context, true),
-                    child: Text('Delete')),
+                    child: const Text('Delete')),
               ],
             ));
 
     return result;
+  }
+
+  void addNewSurah(String name) {
+    final nameSurah = {
+      "name": name,
+    };
+    final db = FirebaseFirestore.instance;
+    db.collection("surahName").add(nameSurah);
+  }
+
+  void removeSurah(String id) {
+    final db = FirebaseFirestore.instance;
+    db.collection("surahName").doc(id).delete();
   }
 
   // void playRecording() async {

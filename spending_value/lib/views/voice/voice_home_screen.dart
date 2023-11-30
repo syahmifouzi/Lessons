@@ -17,7 +17,7 @@ class VoiceHomeScreen extends StatelessWidget {
         tooltip: 'Create New',
         child: const Icon(Icons.add),
       ),
-      body: ListRecording(),
+      body: const ListRecording(),
     );
   }
 }
@@ -31,7 +31,7 @@ class ListRecording extends StatelessWidget {
     final db = FirebaseFirestore.instance;
     final dbRef = db.collection("audio");
     return FutureBuilder(
-        future: dbRef.get(),
+        future: dbRef.orderBy("timestamp", descending: true).limit(10).get(),
         builder: ((context, querySnapshot) {
           if (querySnapshot.hasError) {
             return errorWidget();
@@ -48,11 +48,11 @@ class ListRecording extends StatelessWidget {
   }
 
   Widget errorWidget() {
-    return Center(child: Text("Error reading from database"));
+    return const Center(child: Text("Error reading from database"));
   }
 
   Widget loadingWidget() {
-    return Center(
+    return const Center(
         child: SizedBox(
             width: 60, height: 60, child: CircularProgressIndicator()));
   }
@@ -60,8 +60,9 @@ class ListRecording extends StatelessWidget {
   Widget successWidget(List<AudioDbDoc> audioList) {
     return ListView.builder(
         itemCount: audioList.length,
-        prototypeItem:
-            ListTileRecording(audiodata: AudioDbDoc("proto", "proto", "proto")),
+        prototypeItem: ListTileRecording(
+            audiodata: AudioDbDoc("proto", "proto", "proto", "proto",
+                DateTime.now(), "proto", "proto", "0", "0")),
         itemBuilder: (context, index) {
           return ListTileRecording(audiodata: audioList[index]);
         });
@@ -77,6 +78,7 @@ class ListTileRecording extends StatelessWidget {
     return Card(
       child: ListTile(
         title: Text(audiodata.title),
+        subtitle: Text("${audiodata.getDate()}  |  ${audiodata.getTime()}"),
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
         onTap: () {
           context.read<AudioStore>().setAudio(audiodata);
