@@ -22,9 +22,9 @@ class HomePage extends StatelessWidget {
         alignment: Alignment.center,
         child: ElevatedButton(
             onPressed: () {
-              Navigator.pushNamed(context, Routes.recordAudioRoute);
+              // Navigator.pushNamed(context, Routes.voiceRecordRoute);
             },
-            child: const Text('Record Audio')),
+            child: const Text('Hello')),
       ),
     );
   }

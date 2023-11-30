@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:spending_value/views/home/home_page.dart';
+import 'package:spending_value/views/voice/voice_home_screen.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -28,8 +29,9 @@ class _HomeScreenState extends State<HomeScreen> {
             label: 'Home',
           ),
           NavigationDestination(
-            icon: Icon(Icons.business),
-            label: 'Business',
+            selectedIcon: Icon(Icons.keyboard_voice),
+            icon: Icon(Icons.keyboard_voice_outlined),
+            label: 'Voice',
           ),
           NavigationDestination(
             selectedIcon: Icon(Icons.school),
@@ -40,11 +42,7 @@ class _HomeScreenState extends State<HomeScreen> {
       ),
       body: [
         const HomePage(),
-        Container(
-          color: Colors.green,
-          alignment: Alignment.center,
-          child: const Text('Page 2'),
-        ),
+        const VoiceHomeScreen(),
         Container(
           color: Colors.blue,
           alignment: Alignment.center,
