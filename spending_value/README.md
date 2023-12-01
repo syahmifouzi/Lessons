@@ -19,3 +19,10 @@ To add a plugin:
 1. flutter pub add <plugin-name>
 2. flutterfire configure OR flutterfire configure --project=spending-value
 3. overwrite the file during the configure process
+
+To release apk:
+(Make sure phone in dev mode and enable usb debugging)
+flutter clean
+flutter pub get
+flutter build apk --split-per-abi
+flutter install --use-application-binary=D:\GitHub\Lessons\spending_value\build\app\outputs\flutter-apk\app-arm64-v8a-release.apk
