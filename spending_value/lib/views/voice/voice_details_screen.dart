@@ -219,12 +219,19 @@ class _VoiceDetailsScreenState extends State<VoiceDetailsScreen> {
     };
     final db = FirebaseFirestore.instance;
     final dbRef = db.collection("audio").doc(id);
+    bool hasError = false;
     try {
       await dbRef.update(audioDB);
       print('Success update doc');
     } catch (e) {
+      hasError = true;
       print('Error updating doc: $e');
     }
+    if (hasError) {
+      snackMsg("Failed to update on server");
+      return;
+    }
+    snackMsg("Success update on server");
   }
 
   // Future<String> renameDialog(String oldTitle) async {
@@ -284,10 +291,12 @@ class _VoiceDetailsScreenState extends State<VoiceDetailsScreen> {
     final storageId = _audiodata.id;
     final audioRef = storageRef.child("audio/$storageId.m4a");
     bool deleteSuccess = false;
+    bool hasError = false;
     try {
       await audioRef.delete();
       deleteSuccess = true;
     } catch (e) {
+      hasError = true;
       print("Error deleting storage: $e");
     }
     if (!deleteSuccess) {
@@ -297,8 +306,15 @@ class _VoiceDetailsScreenState extends State<VoiceDetailsScreen> {
     try {
       await db.collection("audio").doc(storageId).delete();
     } catch (e) {
+      hasError = true;
       print("Error deleting database: $e");
     }
+    if (hasError) {
+      snackMsg("Failed to delete on server");
+      return;
+    }
+    snackMsg("Success deleted on server");
+    navigateBack();
   }
 
   Future<bool?> confirmDeleteDialog(String title) async {
@@ -325,12 +341,58 @@ class _VoiceDetailsScreenState extends State<VoiceDetailsScreen> {
       "name": name,
     };
     final db = FirebaseFirestore.instance;
-    db.collection("surahName").add(nameSurah);
+    bool hasError = false;
+    try {
+      db.collection("surahName").add(nameSurah);
+    } catch (e) {
+      hasError = true;
+      print("Error add new surah: $e");
+    }
+    if (hasError) {
+      snackMsg("Failed to add new surah");
+      return;
+    }
+    snackMsg("Success added new surah");
+    context.read<SurahnameStore>().getSurahListName();
+
+    _controllerSearch.closeView(name);
   }
 
   void removeSurah(String id) {
     final db = FirebaseFirestore.instance;
-    db.collection("surahName").doc(id).delete();
+    bool hasError = false;
+    try {
+      db.collection("surahName").doc(id).delete();
+    } catch (e) {
+      hasError = true;
+      print("Error delete surah: $e");
+    }
+    if (hasError) {
+      snackMsg("Failed to delete surah");
+      return;
+    }
+    snackMsg("Success deleted surah");
+    context.read<SurahnameStore>().getSurahListName();
+  }
+
+  SnackBar snackMsg(String msg) {
+    return SnackBar(
+      content: Text(msg),
+      action: SnackBarAction(
+        label: 'Undo',
+        onPressed: () {
+          // Some code to undo the change.
+        },
+      ),
+    );
+  }
+
+  void printSnack(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(snackMsg(msg));
+  }
+
+  void navigateBack() {
+    Navigator.pop(context);
   }
 
   // void playRecording() async {

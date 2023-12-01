@@ -196,10 +196,13 @@ class _VoiceRecordScreenState extends State<VoiceRecordScreen> {
       _progress = "Now Recording...";
     });
 
-    await _audioRecorder.start(const RecordConfig(), path: filepath);
+    await _audioRecorder.start(
+        const RecordConfig(
+            autoGain: true, echoCancel: true, noiseSuppress: true),
+        path: filepath);
   }
 
-  void stopRecording() async {
+  Future<void> stopRecording() async {
     _recordedPath = await _audioRecorder.stop();
     setState(() {
       _progress = "Recording Stopped";
@@ -207,6 +210,9 @@ class _VoiceRecordScreenState extends State<VoiceRecordScreen> {
   }
 
   void saveRecording() async {
+    if (_progress != "Recording Stopped") {
+      await stopRecording();
+    }
     AudioPlayer audioPlayer = AudioPlayer();
     final duration = await audioPlayer.setFilePath(_recordedPath!);
     final db = FirebaseFirestore.instance;
@@ -214,6 +220,7 @@ class _VoiceRecordScreenState extends State<VoiceRecordScreen> {
     final storageRef = FirebaseStorage.instance.ref();
     final audioStorageRef = storageRef.child("audio/${newIdRef.id}.m4a");
     File file = File(_recordedPath!);
+    bool hasError = false;
     try {
       await audioStorageRef.putFile(file);
       String downloadUrl = await audioStorageRef.getDownloadURL();
@@ -229,8 +236,14 @@ class _VoiceRecordScreenState extends State<VoiceRecordScreen> {
       };
       newIdRef.set(audioDB);
     } on FirebaseException catch (e) {
+      hasError = true;
       print(e);
     }
+    if (hasError) {
+      printSnack("Failed save");
+    }
+    printSnack("Success save");
+    navigateBack();
   }
 
   Future<String?> renameDialog() async {
@@ -277,12 +290,58 @@ class _VoiceRecordScreenState extends State<VoiceRecordScreen> {
       "name": name,
     };
     final db = FirebaseFirestore.instance;
-    db.collection("surahName").add(nameSurah);
+    bool hasError = false;
+    try {
+      db.collection("surahName").add(nameSurah);
+    } catch (e) {
+      hasError = true;
+      print("Error add new surah: $e");
+    }
+    if (hasError) {
+      snackMsg("Failed to add new surah");
+      return;
+    }
+    snackMsg("Success added new surah");
+    context.read<SurahnameStore>().getSurahListName();
+
+    _controllerSearch.closeView(name);
   }
 
   void removeSurah(String id) {
     final db = FirebaseFirestore.instance;
-    db.collection("surahName").doc(id).delete();
+    bool hasError = false;
+    try {
+      db.collection("surahName").doc(id).delete();
+    } catch (e) {
+      hasError = true;
+      print("Error delete surah: $e");
+    }
+    if (hasError) {
+      snackMsg("Failed to delete surah");
+      return;
+    }
+    snackMsg("Success deleted surah");
+    context.read<SurahnameStore>().getSurahListName();
+  }
+
+  SnackBar snackMsg(String msg) {
+    return SnackBar(
+      content: Text(msg),
+      action: SnackBarAction(
+        label: 'Undo',
+        onPressed: () {
+          // Some code to undo the change.
+        },
+      ),
+    );
+  }
+
+  void printSnack(String msg) {
+    ScaffoldMessenger.of(context).showSnackBar(snackMsg(msg));
+  }
+
+  void navigateBack() {
+    Navigator.pop(context);
   }
 }
 
