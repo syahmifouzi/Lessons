@@ -1,10 +1,103 @@
+import 'dart:isolate';
+
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:flutter/services.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
+import 'package:record/record.dart';
+// import 'package:record/record.dart';
 import 'package:spending_value/routes/pages.dart';
 import 'package:spending_value/controllers/providers.dart';
+// import 'package:workmanager/workmanager.dart';
 import 'firebase_options.dart';
+
+// const recordAudio = "recordAudio";
+// final audioRecorder = AudioRecorder();
+
+// @pragma('vm:entry-point')
+// void callbackDispatcher() {
+//   Workmanager().executeTask((task, inputData) async {
+//     switch (task) {
+//       case recordAudio:
+//         // record audio process
+//         break;
+//       default:
+//     }
+
+//     return Future.value(true);
+//   });
+// }
+
+// IMPORTANT
+// Must declare this function as static
+// or declare as top level function
+@pragma('vm:entry-point')
+void setupFn(List<dynamic> args) async {
+  SendPort sendPort = args[0];
+  RootIsolateToken token = args[1];
+  String appFolderPath = args[2];
+  BackgroundIsolateBinaryMessenger.ensureInitialized(token);
+  final audioRecorder = AudioRecorder();
+  final datetimeL = await startRecorderIsolated(audioRecorder, appFolderPath);
+
+  ReceivePort receivePort = ReceivePort();
+  // Link to #1
+  sendPort.send(receivePort.sendPort);
+  // SendPort thispostport = await receivePort.first;
+  SendPort? thispostport;
+  await for (var msg in receivePort) {
+    if (msg is SendPort) {
+      thispostport = msg;
+      final tosend = {
+        "cmd": "start",
+      };
+      thispostport.send(tosend);
+      continue;
+    }
+    switch (msg) {
+      case "stop":
+        if (thispostport != null) {
+          final recordedPathL = await stopRecorderIsolated(audioRecorder);
+          final tosend = {
+            "cmd": "stop",
+            "path": recordedPathL,
+            "datetime": datetimeL
+          };
+          thispostport.send(tosend);
+        }
+        break;
+      default:
+        if (thispostport != null) {
+          final tosend = {
+            "cmd": "error",
+          };
+          thispostport.send(tosend);
+        }
+    }
+  }
+}
+
+Future<DateTime> startRecorderIsolated(
+    AudioRecorder audioRecorder, String appFolderPath) async {
+  final datetime = DateTime.now();
+  final title = datetime.millisecondsSinceEpoch.toString();
+
+  final filepath = '$appFolderPath/$title.m4a';
+
+  audioRecorder.start(
+      const RecordConfig(autoGain: true, echoCancel: true, noiseSuppress: true),
+      path: filepath);
+
+  return datetime;
+}
+
+Future<String?> stopRecorderIsolated(AudioRecorder audioRecorder) async {
+  final res = await audioRecorder.stop();
+  audioRecorder.dispose();
+  return res;
+}
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();

@@ -1,4 +1,6 @@
+import 'dart:async';
 import 'dart:io';
+import 'dart:isolate';
 
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
@@ -30,6 +32,11 @@ class _VoiceRecordScreenState extends State<VoiceRecordScreen> {
   final TextEditingController _controllerAyatEnd = TextEditingController();
   final SearchController _controllerSearch = SearchController();
 
+  // Isolate? _isolateAudioRecorder;
+
+  final testIsolateClass = IsolateAudioRecorder();
+  int testi = 0;
+
   @override
   void initState() {
     super.initState();
@@ -38,8 +45,23 @@ class _VoiceRecordScreenState extends State<VoiceRecordScreen> {
 
   @override
   void dispose() {
+    // testDispose();
+    isolateDispose();
     _audioRecorder.dispose();
     super.dispose();
+  }
+
+  void isolateDispose() {
+    // if (_isolateAudioRecorder != null) {
+    //   _isolateAudioRecorder!.kill(priority: Isolate.immediate);
+    // }
+  }
+
+  void testDispose() {
+    final db = FirebaseFirestore.instance;
+    final logmsg = {"message": "dispose called", "timestamp": DateTime.now()};
+    db.collection("log").add(logmsg);
+    print('dispose called');
   }
 
   @override
@@ -51,6 +73,7 @@ class _VoiceRecordScreenState extends State<VoiceRecordScreen> {
           TextButton(
               onPressed: () {
                 saveRecording();
+                // Isolate.spawn(controlPort)
               },
               child: const Text("Save"))
         ],
@@ -58,6 +81,27 @@ class _VoiceRecordScreenState extends State<VoiceRecordScreen> {
       body: SingleChildScrollView(
         child: Column(
           children: [
+            ElevatedButton(
+                onPressed: () {
+                  testIsolateClass.spawn();
+                },
+                child: Text("spawn")),
+            ElevatedButton(
+                onPressed: () {
+                  testIsolateClass.sendmsg("stop");
+                },
+                child: Text("send stop")),
+            ElevatedButton(
+                onPressed: () {
+                  testi += 1;
+                  testIsolateClass.sendmsg("$testi");
+                },
+                child: Text("send i++")),
+            ElevatedButton(
+                onPressed: () {
+                  testIsolateClass.kill();
+                },
+                child: Text("kill")),
             Text(_progress),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
@@ -201,6 +245,19 @@ class _VoiceRecordScreenState extends State<VoiceRecordScreen> {
             autoGain: true, echoCancel: true, noiseSuppress: true),
         path: filepath);
   }
+
+  // Future<void> isolateRecording() async {
+  //   ReceivePort port = ReceivePort();
+  //   _isolateAudioRecorder =
+  //       await Isolate.spawn<SendPort>(startIsolateRecording, port.sendPort);
+  // }
+
+  // void startIsolateRecording(SendPort sendPort) {
+  //   ReceivePort receivePort = ReceivePort();
+  //   StreamSubscription? isolateSubs;
+  //   sendPort.send(receivePort.sendPort);
+  //   isolateSubs = receivePort.listen((message) {});
+  // }
 
   Future<void> stopRecording() async {
     _recordedPath = await _audioRecorder.stop();
@@ -347,4 +404,73 @@ class _VoiceRecordScreenState extends State<VoiceRecordScreen> {
 
 class Paths {
   static String recording = 'RapidNote/recordings';
+}
+
+class IsolateAudioRecorder {
+  // https://blog.codemagic.io/understanding-flutter-isolates/
+  // https://blog.logrocket.com/multithreading-flutter-using-dart-isolates/
+
+  // ReceivePort? port;
+  SendPort? postport;
+  // ReceivePort? responseport;
+  Isolate? isolateAudioRecorder;
+
+  void spawn() async {
+    print('isolateAudioRecorder is spawned');
+    ReceivePort port = ReceivePort();
+    isolateAudioRecorder =
+        await Isolate.spawn<SendPort>(setupFn, port.sendPort);
+    // Link to #1
+    postport = await port.first;
+    ReceivePort responseport = ReceivePort();
+    postport!.send(responseport.sendPort);
+    await for (var msg in responseport) {
+      print(msg);
+    }
+  }
+
+  void kill() {
+    if (isolateAudioRecorder == null) {
+      print('isolateAudioRecorder is null');
+      return;
+    }
+    isolateAudioRecorder!.kill(priority: Isolate.immediate);
+    print('isolateAudioRecorder is killed');
+  }
+
+  void sendmsg(String msg) async {
+    if (postport == null) {
+      return;
+    }
+    postport!.send(msg);
+  }
+
+  void setupFn(SendPort sendPort) async {
+    ReceivePort receivePort = ReceivePort();
+    // Link to #1
+    sendPort.send(receivePort.sendPort);
+    // SendPort thispostport = await receivePort.first;
+    SendPort? thispostport;
+    await for (var msg in receivePort) {
+      if (msg is SendPort) {
+        thispostport = msg;
+        continue;
+      }
+      switch (msg) {
+        case "stop":
+          if (thispostport != null) {
+            thispostport.send("Ok");
+          } else {
+            print('thispostport is null');
+          }
+          break;
+        default:
+          if (thispostport != null) {
+            thispostport.send(msg);
+          } else {
+            print('thispostport is null');
+          }
+      }
+    }
+  }
 }

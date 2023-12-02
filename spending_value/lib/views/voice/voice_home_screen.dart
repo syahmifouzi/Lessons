@@ -37,7 +37,7 @@ class ListRecording extends StatelessWidget {
             return errorWidget();
           } else if (querySnapshot.hasData) {
             for (var docSnapshot in querySnapshot.data!.docs) {
-              print('${docSnapshot.id} => ${docSnapshot.data()}');
+              // print('${docSnapshot.id} => ${docSnapshot.data()}');
               audioList
                   .add(AudioDbDoc.fromJson(docSnapshot.id, docSnapshot.data()));
             }
