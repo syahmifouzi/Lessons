@@ -5,6 +5,7 @@ import 'package:spending_value/controllers/audio_store.dart';
 import 'package:spending_value/controllers/audiorecord_isolate_store.dart';
 import 'package:spending_value/controllers/splash_store.dart';
 import 'package:spending_value/controllers/surahname_store.dart';
+import 'package:spending_value/controllers/test_store.dart';
 
 class Providers {
   static List<SingleChildWidget> providers = [
@@ -16,5 +17,6 @@ class Providers {
         create: (context) => SurahnameStore()),
     ChangeNotifierProvider<AudiorecordIsolateStore>(
         create: (context) => AudiorecordIsolateStore()),
+    ChangeNotifierProvider<TestStore>(create: (context) => TestStore()),
   ];
 }

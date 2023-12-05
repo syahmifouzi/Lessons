@@ -1,0 +1,39 @@
+{
+  "expo": {
+    "name": "SpendingValueExpo",
+    "slug": "spending-value",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "assetBundlePatterns": [
+      "**/*"
+    ],
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      }
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "ef94a4fd-951f-49f1-a270-7ae287809bdc"
+      }
+    },
+    "owner": "syahmifouzi",
+    "plugins": [
+      "expo-router"
+    ]
+  }
+}

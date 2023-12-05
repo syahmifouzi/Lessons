@@ -12,6 +12,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 import 'package:record/record.dart';
 import 'package:spending_value/controllers/surahname_store.dart';
+import 'package:spending_value/controllers/test_store.dart';
 
 class VoiceRecordScreen extends StatefulWidget {
   const VoiceRecordScreen({super.key});
@@ -34,7 +35,7 @@ class _VoiceRecordScreenState extends State<VoiceRecordScreen> {
 
   // Isolate? _isolateAudioRecorder;
 
-  final testIsolateClass = IsolateAudioRecorder();
+  // final testIsolateClass = IsolateAudioRecorder();
   int testi = 0;
 
   @override
@@ -83,23 +84,27 @@ class _VoiceRecordScreenState extends State<VoiceRecordScreen> {
           children: [
             ElevatedButton(
                 onPressed: () {
-                  testIsolateClass.spawn();
+                  context.read<TestStore>().spawn();
+                  // testIsolateClass.spawn();
                 },
                 child: Text("spawn")),
             ElevatedButton(
                 onPressed: () {
-                  testIsolateClass.sendmsg("stop");
+                  context.read<TestStore>().sendmsg("stop");
+                  // testIsolateClass.sendmsg("stop");
                 },
                 child: Text("send stop")),
             ElevatedButton(
                 onPressed: () {
                   testi += 1;
-                  testIsolateClass.sendmsg("$testi");
+                  // testIsolateClass.sendmsg("$testi");
+                  context.read<TestStore>().sendmsg("$testi");
                 },
                 child: Text("send i++")),
             ElevatedButton(
                 onPressed: () {
-                  testIsolateClass.kill();
+                  context.read<TestStore>().kill();
+                  // testIsolateClass.kill();
                 },
                 child: Text("kill")),
             Text(_progress),
