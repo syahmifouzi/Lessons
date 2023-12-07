@@ -1,6 +1,7 @@
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { BottomNavigation, BottomNavigationTab, Layout, Text, Icon } from '@ui-kitten/components';
-import { VoiceRecorderScreen } from '../screens/VoiceRecorderScreen';
+import { VoiceRecorderScreen } from '../screens/voiceRecorder/VoiceRecorderScreen';
+import { VoiceRecorderListScreen } from '../screens/voiceRecorder/VoiceRecorderListScreen';
 
 const { Navigator, Screen } = createBottomTabNavigator();
 
@@ -37,6 +38,10 @@ const BottomTabBar = ({ navigation, state }) => (
             title='Orders'
             icon={BellIcon}
         />
+        <BottomNavigationTab
+            title='VoiceList'
+            icon={BellIcon}
+        />
     </BottomNavigation>
 );
 
@@ -44,5 +49,6 @@ export const HomeNavigator = () => (
     <Navigator tabBar={props => <BottomTabBar {...props} />} screenOptions={{ headerShown: false }}>
         <Screen name='Users' component={UsersScreen} />
         <Screen name='Orders' component={VoiceRecorderScreen} />
+        <Screen name='VoiceList' component={VoiceRecorderListScreen} />
     </Navigator>
 );

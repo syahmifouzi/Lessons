@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useContext } from 'react';
 import { Layout, Text, Button } from '@ui-kitten/components';
 import { Alert } from 'react-native';
 import { Audio } from 'expo-av';
 import * as FileSystem from 'expo-file-system';
 import { Slider } from '@rneui/themed';
+import { MobxContext } from '../../stores/Context';
+import { observer } from "mobx-react-lite";
 
 export const VoiceRecorderScreen = () => {
     const [recording, setRecording] = useState();
@@ -13,6 +15,9 @@ export const VoiceRecorderScreen = () => {
         value: 0,
         duration: 5000
     });
+    
+    const mobxCtx = useContext(MobxContext);
+    const audioStore = mobxCtx.audioStore;
 
     useEffect(() => {
         console.log('Run once..');
@@ -160,9 +165,12 @@ export const VoiceRecorderScreen = () => {
     //         : undefined;
     // }, [sound]);
 
+    const ListLength = observer(({length})=><Text>Length is: {length}</Text>);
+
     return (
         <Layout style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
             <Text category='h1'>Voice Recorder</Text>
+            <ListLength length={audioStore.getListItem.length} />
             <Button onPress={() => Alert.alert('Alert Title')} >Alert</Button>
             <Button onPress={startRecording} >Start Recording</Button>
             <Text category='h1'>.</Text>
