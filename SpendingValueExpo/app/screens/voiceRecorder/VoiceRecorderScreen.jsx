@@ -7,9 +7,7 @@ import * as FileSystem from 'expo-file-system';
 import { Slider } from '@rneui/themed';
 import { MobxContext } from '../../stores/Context';
 import { observer } from "mobx-react-lite";
-import {
-    SafeAreaView,
-} from 'react-native-safe-area-context';
+import { SafeAreaView } from 'react-native-safe-area-context';
 
 export const VoiceRecorderScreen = () => {
     const [recording, setRecording] = useState();

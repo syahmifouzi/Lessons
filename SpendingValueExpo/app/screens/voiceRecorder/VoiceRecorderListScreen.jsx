@@ -1,9 +1,11 @@
 import React, { useContext, useEffect } from 'react';
-import { Layout, Text, Button } from '@ui-kitten/components';
+import { StyleSheet } from 'react-native';
+import { Layout, Text, List, ListItem, Divider, Icon } from '@ui-kitten/components';
 import { MobxContext } from '../../stores/Context';
 import { observer } from "mobx-react-lite"
+import { SafeAreaView } from 'react-native-safe-area-context';
 
-export const VoiceRecorderListScreen = () => {
+export const VoiceRecorderListScreen = ({ navigation }) => {
 
     const mobxCtx = useContext(MobxContext);
     const audioStore = mobxCtx.audioStore;
@@ -12,18 +14,65 @@ export const VoiceRecorderListScreen = () => {
 
     useEffect(() => {
         // console.log('Run once..');
-        // getListFromDB();
         audioStore.setListFromServer(firebaseApp);
-        // console.log(`mobx test: ${mobxCtx.audioStore.details.testTitle}`);
     }, []);
 
-    const ListLength = observer(({store})=><Text>{store.getListItem.length}</Text>);
+
+    const renderIcon = () => (
+        <Icon
+            style={styles.icon}
+            fill='#8F9BB3'
+            name='arrow-ios-forward'
+        />
+    );
+
+    const renderDescription = (item) => {
+        return (
+            <Text>{item.status}</Text>
+        );
+    }
+
+    function goToDetailsScreen(index) {
+        audioStore.setSelectedIndex(index);
+        navigation.navigate('Details');
+    }
+
+    const renderItem = (item) => {
+        let dataitem = item.item;
+        let index = item.index;
+        return (
+            <ListItem
+                title={dataitem.title}
+                description={renderDescription(dataitem)}
+                accessoryRight={renderIcon}
+                onPress={() => goToDetailsScreen(index)}
+            />
+        )
+    };
+
+    const ListRecording = observer(({ store }) =>
+        <List
+            style={{}}
+            keyExtractor={item => item.id}
+            data={store.getListItem}
+            renderItem={renderItem}
+            ItemSeparatorComponent={Divider}
+        />);
 
 
     return (
-        <Layout style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-            <Text category='h1'>List</Text>
-            <ListLength store={audioStore} />
+        <Layout style={{ flex: 1 }}>
+            <SafeAreaView style={{ flex: 1 }}>
+                <Text category='h1'>List</Text>
+                <ListRecording store={audioStore} />
+            </SafeAreaView>
         </Layout>
     );
 }
+
+const styles = StyleSheet.create({
+    icon: {
+        width: 32,
+        height: 32,
+    },
+});

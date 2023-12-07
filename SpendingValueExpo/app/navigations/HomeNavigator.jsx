@@ -18,6 +18,12 @@ const BellIcon = (props) => (
         name='bell-outline'
     />
 );
+const BriefcaseIcon = (props) => (
+    <Icon
+        {...props}
+        name='briefcase'
+    />
+);
 
 const UsersScreen = () => (
     <Layout style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
@@ -39,8 +45,8 @@ const BottomTabBar = ({ navigation, state }) => (
             icon={BellIcon}
         />
         <BottomNavigationTab
-            title='VoiceList'
-            icon={BellIcon}
+            title='Voice List'
+            icon={BriefcaseIcon}
         />
     </BottomNavigation>
 );

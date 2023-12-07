@@ -4,6 +4,7 @@ import { getFirestore, collection, getDocs } from "firebase/firestore";
 class AudioStoreTable {
     details = new AudioDoc();
     listItem = [];
+    selectedIndex = 0;
 
     constructor() {
         makeAutoObservable(this);
@@ -13,12 +14,16 @@ class AudioStoreTable {
         return this.listItem;
     }
 
-    get title() {
-        return this.testTitle;
+    get getSelectedItem() {
+        return this.listItem[this.selectedIndex];
     }
 
     setListItem = action((val)=>{
         this.listItem = val;
+    });
+
+    setSelectedIndex = action((val)=>{
+        this.selectedIndex = val;
     });
 
 

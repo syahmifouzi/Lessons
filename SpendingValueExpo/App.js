@@ -7,7 +7,8 @@ import { MainNavigator } from './app/navigations/MainNavigator';
 import {
   SafeAreaProvider,
 } from 'react-native-safe-area-context';
-import { MobxContext, ContextStores } from './app/stores/Context';
+import { MobxContext } from './app/stores/Context';
+import { default as theme } from './app/constants/theme.json'
 
 
 // Optionally import the services that you want to use
@@ -25,7 +26,7 @@ export default function App() {
   return (
     <>
       <IconRegistry icons={EvaIconsPack} />
-      <ApplicationProvider {...eva} theme={eva.light}>
+      <ApplicationProvider {...eva} theme={{ ...eva.light, ...theme }}>
         <SafeAreaProvider>
           <NavigationContainer>
             <MobxContext.Provider value={mobxCtx}>
