@@ -169,7 +169,7 @@ export const VoiceRecorderScreen = () => {
     //         : undefined;
     // }, [sound]);
 
-    const ListLength = observer(({ length }) => <Text>Length is: {length}</Text>);
+    const ListLength = observer(({ store }) => <Text>Length is: {store.getListItem.length}</Text>);
 
     return (
 
@@ -180,7 +180,7 @@ export const VoiceRecorderScreen = () => {
                         flex: 1, justifyContent: 'center', alignItems: 'center'
                     }}>
                         <Text category='h1'>Voice Recorder</Text>
-                        <ListLength length={audioStore.getListItem.length} />
+                        <ListLength store={audioStore} />
                         <Button onPress={() => Alert.alert('Alert Title')} >Alert</Button>
                         <Button onPress={startRecording} >Start Recording</Button>
                         <Text category='h1'>.</Text>
