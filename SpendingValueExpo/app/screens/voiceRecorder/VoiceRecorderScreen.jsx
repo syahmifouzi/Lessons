@@ -27,6 +27,11 @@ export const VoiceRecorderScreen = () => {
         console.log('Run once..');
     }, []);
 
+    const _onRecordingStatusUpdate = (recordingStatus) => {
+        // console.log(`Recording update`);
+        // console.log(recordingStatus);
+    }
+
     const _onPlaybackStatusUpdate = (playbackStatus) => {
         if (!playbackStatus.isLoaded) {
             // not yet loaded
@@ -71,10 +76,16 @@ export const VoiceRecorderScreen = () => {
             });
 
             console.log('Starting recording..');
-            const { recording } = await Audio.Recording.createAsync(Audio.RecordingOptionsPresets.HIGH_QUALITY
+            const { recording } = await Audio.Recording.createAsync(Audio.RecordingOptionsPresets.HIGH_QUALITY,
+                _onRecordingStatusUpdate
             );
             setRecording(recording);
             console.log('Recording started');
+            // Which is equivalent to the following:
+            // const recording = new Audio.Recording();
+            // await recording.prepareToRecordAsync(options);
+            // recording.setOnRecordingStatusUpdate(onRecordingStatusUpdate);
+            // await recording.startAsync();
         } catch (err) {
             console.error('Failed to start recording', err);
         }
@@ -130,8 +141,8 @@ export const VoiceRecorderScreen = () => {
             const sound = new Audio.Sound();
             setSound(sound);
             await sound.loadAsync(
-                // { uri: playbackuri },
-                { uri: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" },
+                { uri: playbackuri },
+                // { uri: "https://www.soundhelix.com/examples/mp3/SoundHelix-Song-2.mp3" },
                 // { shouldPlay: true, }
             );
             // const { playbackObject } = await Audio.Sound.createAsync(
