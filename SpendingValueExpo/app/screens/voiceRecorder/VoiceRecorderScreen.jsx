@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useContext } from 'react';
+import { ScrollView } from 'react-native';
 import { Layout, Text, Button } from '@ui-kitten/components';
 import { Alert } from 'react-native';
 import { Audio } from 'expo-av';
@@ -6,6 +7,9 @@ import * as FileSystem from 'expo-file-system';
 import { Slider } from '@rneui/themed';
 import { MobxContext } from '../../stores/Context';
 import { observer } from "mobx-react-lite";
+import {
+    SafeAreaView,
+} from 'react-native-safe-area-context';
 
 export const VoiceRecorderScreen = () => {
     const [recording, setRecording] = useState();
@@ -15,7 +19,7 @@ export const VoiceRecorderScreen = () => {
         value: 0,
         duration: 5000
     });
-    
+
     const mobxCtx = useContext(MobxContext);
     const audioStore = mobxCtx.audioStore;
 
@@ -165,32 +169,53 @@ export const VoiceRecorderScreen = () => {
     //         : undefined;
     // }, [sound]);
 
-    const ListLength = observer(({length})=><Text>Length is: {length}</Text>);
+    const ListLength = observer(({ length }) => <Text>Length is: {length}</Text>);
 
     return (
-        <Layout style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-            <Text category='h1'>Voice Recorder</Text>
-            <ListLength length={audioStore.getListItem.length} />
-            <Button onPress={() => Alert.alert('Alert Title')} >Alert</Button>
-            <Button onPress={startRecording} >Start Recording</Button>
-            <Text category='h1'>.</Text>
-            <Button onPress={stopRecording} >Stop Recording</Button>
-            <Text category='h1'>.</Text>
-            <Button onPress={playSound} >Playback Recording</Button>
-            <Text category='h1'>.</Text>
-            <Button onPress={stopSound} >Stop Playback Recording</Button>
-            <Text category='h1'>.</Text>
-            <Layout style={{ padding: 20, justifyContent: 'center', alignItems: 'stretch', width: '100%' }}>
-                <Text>{_millisToDuration(slidervalue.value)}</Text>
-                <Slider
-                    value={slidervalue.value}
-                    onValueChange={_onSliderValueChanged}
-                    minimumValue={0}
-                    maximumValue={slidervalue.duration}
-                    step={1}
-                />
-                <Text>{_millisToDuration(slidervalue.duration)}</Text>
-            </Layout>
+
+        <Layout style={{ flex: 1 }}>
+            <ScrollView>
+                <SafeAreaView style={{ flex: 1 }}>
+                    <Layout style={{
+                        flex: 1, justifyContent: 'center', alignItems: 'center'
+                    }}>
+                        <Text category='h1'>Voice Recorder</Text>
+                        <ListLength length={audioStore.getListItem.length} />
+                        <Button onPress={() => Alert.alert('Alert Title')} >Alert</Button>
+                        <Button onPress={startRecording} >Start Recording</Button>
+                        <Text category='h1'>.</Text>
+                        <Button onPress={stopRecording} >Stop Recording</Button>
+                        <Text category='h1'>.</Text>
+                        <Text category='h1'>.</Text>
+                        <Text category='h1'>.</Text>
+                        <Text category='h1'>.</Text>
+                        <Text category='h1'>.</Text>
+                        <Text category='h1'>.</Text>
+                        <Text category='h1'>.</Text>
+                        <Text category='h1'>.</Text>
+                        <Text category='h1'>.</Text>
+                        <Text category='h1'>.</Text>
+                        <Text category='h1'>.</Text>
+                        <Text category='h1'>.</Text>
+                        <Text category='h1'>.</Text>
+                        <Button onPress={playSound} >Playback Recording</Button>
+                        <Text category='h1'>.</Text>
+                        <Button onPress={stopSound} >Stop Playback Recording</Button>
+                        <Text category='h1'>.</Text>
+                        <Layout style={{ padding: 20, justifyContent: 'center', alignItems: 'stretch', width: '100%' }}>
+                            <Text>{_millisToDuration(slidervalue.value)}</Text>
+                            <Slider
+                                value={slidervalue.value}
+                                onValueChange={_onSliderValueChanged}
+                                minimumValue={0}
+                                maximumValue={slidervalue.duration}
+                                step={1}
+                            />
+                            <Text>{_millisToDuration(slidervalue.duration)}</Text>
+                        </Layout>
+                    </Layout>
+                </SafeAreaView>
+            </ScrollView>
         </Layout>
     );
 }

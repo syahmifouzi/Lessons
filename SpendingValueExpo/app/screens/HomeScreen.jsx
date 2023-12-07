@@ -1,4 +1,3 @@
-import { Button, Divider, Layout, TopNavigation } from '@ui-kitten/components';
 import { HomeNavigator } from '../navigations/HomeNavigator';
 import {
     useSafeAreaInsets,
