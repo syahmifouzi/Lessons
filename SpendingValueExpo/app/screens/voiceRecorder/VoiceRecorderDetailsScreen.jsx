@@ -5,7 +5,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { MobxContext } from '../../stores/Context';
 import { observer } from "mobx-react-lite"
 import Slider from '@react-native-community/slider';
-import { Audio } from 'expo-av';
+import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from 'expo-av';
 
 export const VoiceRecorderDetailsScreen = ({ navigation }) => {
     const mobxCtx = useContext(MobxContext);
@@ -103,7 +103,16 @@ export const VoiceRecorderDetailsScreen = ({ navigation }) => {
         // await sound.unloadAsync();
         try {
             console.log('Playing recording');
+            await Audio.setAudioModeAsync({
+                allowsRecordingIOS: false,
+                playsInSilentModeIOS: true,
+                interruptionModeIOS: InterruptionModeIOS.DoNotMix,
+                shouldDuckAndroid: true,
+                interruptionModeAndroid: InterruptionModeAndroid.DoNotMix,
+                playThroughEarpieceAndroid: false,
+            });
             const sound = new Audio.Sound();
+
             setSound(sound);
             let item = audioStore.getSelectedItem;
             await sound.loadAsync(
@@ -118,14 +127,6 @@ export const VoiceRecorderDetailsScreen = ({ navigation }) => {
             // await sound.setPositionAsync(0);
             sound.setOnPlaybackStatusUpdate(_onPlaybackStatusUpdate);
 
-            await sound.setAudioModeAsync({
-                allowsRecordingIOS: false,
-                playsInSilentModeIOS: true,
-                interruptionModeIOS: Audio.INTERRUPTION_MODE_IOS_DO_NOT_MIX,
-                shouldDuckAndroid: true,
-                interruptionModeAndroid: Audio.INTERRUPTION_MODE_ANDROID_DO_NOT_MIX,
-                playThroughEarpieceAndroid: false,
-            });
             await sound.playAsync();
             // await playbackObject.unloadAsync();
         } catch (error) {

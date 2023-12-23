@@ -1,7 +1,7 @@
 import React, { useContext, useEffect } from 'react';
 import { StyleSheet, View, TextInput, ScrollView } from 'react-native';
 import { Divider, Icon, Layout, Text, TopNavigation, TopNavigationAction, Modal, Card, Button } from '@ui-kitten/components';
-import { Audio } from 'expo-av';
+import { Audio, InterruptionModeIOS, InterruptionModeAndroid } from 'expo-av';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { MobxContext } from '../../stores/Context';
 import { observer } from "mobx-react-lite"
@@ -92,9 +92,9 @@ export const VoiceRecorderCreateScreen = ({ navigation }) => {
             await Audio.setAudioModeAsync({
                 allowsRecordingIOS: true,
                 playsInSilentModeIOS: true,
-                interruptionModeIOS: Audio.INTERRUPTION_MODE_IOS_DO_NOT_MIX,
+                interruptionModeIOS: InterruptionModeIOS.DoNotMix,
                 shouldDuckAndroid: true,
-                interruptionModeAndroid: Audio.INTERRUPTION_MODE_ANDROID_DO_NOT_MIX,
+                interruptionModeAndroid: InterruptionModeAndroid.DoNotMix,
                 playThroughEarpieceAndroid: false,
             });
 
