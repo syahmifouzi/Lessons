@@ -18,6 +18,7 @@
 - sudo cp -r ./android-studio /usr/local/
 - then, inside usr/local/android-studio/bin
 - execute: ./studio.sh
+- make sure to setup sdk path at eas.json ==> mypreview.env.ANDROID_SDK_ROOT: "XXX" (open android studio to check the SDK path)
 - yarn global add eas-cli XXXX WRONG
 - - Not recommended to use yarn to install global
 - - instead, use npm install -g eas-cli
@@ -25,3 +26,4 @@
 - eas login (if not yet)
 - eas build:configure
 - eas build -p android --profile mypreview --local
+- still failed in the end lol
