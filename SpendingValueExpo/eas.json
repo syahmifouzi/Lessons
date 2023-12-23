@@ -13,9 +13,6 @@
     "mypreview": {
       "android": {
         "buildType": "apk"
-      },
-      "env": {
-        "ANDROID_SDK_ROOT": "/home/user/Android/Sdk"
       }
     },
     "production": {}

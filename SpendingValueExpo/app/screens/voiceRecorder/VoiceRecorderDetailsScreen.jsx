@@ -117,6 +117,15 @@ export const VoiceRecorderDetailsScreen = ({ navigation }) => {
             //     );
             // await sound.setPositionAsync(0);
             sound.setOnPlaybackStatusUpdate(_onPlaybackStatusUpdate);
+
+            await sound.setAudioModeAsync({
+                allowsRecordingIOS: false,
+                playsInSilentModeIOS: true,
+                interruptionModeIOS: Audio.INTERRUPTION_MODE_IOS_DO_NOT_MIX,
+                shouldDuckAndroid: true,
+                interruptionModeAndroid: Audio.INTERRUPTION_MODE_ANDROID_DO_NOT_MIX,
+                playThroughEarpieceAndroid: false,
+            });
             await sound.playAsync();
             // await playbackObject.unloadAsync();
         } catch (error) {
