@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@eva-design/eva": "^2.2.0",
+    "@react-native-community/slider": "4.4.2",
     "@react-navigation/bottom-tabs": "^6.5.11",
     "@react-navigation/native-stack": "^6.9.17",
     "@rneui/base": "^4.0.0-rc.7",
@@ -26,12 +27,14 @@
     "firebase": "^10.7.1",
     "mobx": "^6.12.0",
     "mobx-react-lite": "^4.0.5",
+    "moment": "^2.29.4",
     "react": "18.2.0",
     "react-native": "0.72.6",
     "react-native-gesture-handler": "~2.12.0",
     "react-native-safe-area-context": "4.6.3",
     "react-native-screens": "~3.22.0",
-    "react-native-svg": "13.9.0"
+    "react-native-svg": "13.9.0",
+    "@react-native-community/datetimepicker": "7.2.0"
   },
   "devDependencies": {
     "@babel/core": "^7.20.0"

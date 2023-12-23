@@ -1,6 +1,6 @@
 import React, { useContext, useEffect } from 'react';
 import { StyleSheet } from 'react-native';
-import { Layout, Text, List, ListItem, Divider, Icon } from '@ui-kitten/components';
+import { Layout, Text, List, ListItem, Divider, Icon, Button } from '@ui-kitten/components';
 import { MobxContext } from '../../stores/Context';
 import { observer } from "mobx-react-lite"
 import { SafeAreaView } from 'react-native-safe-area-context';
@@ -28,7 +28,7 @@ export const VoiceRecorderListScreen = ({ navigation }) => {
 
     const renderDescription = (item) => {
         return (
-            <Text>{item.status}</Text>
+            <Text>{item.status} | {item.date()}</Text>
         );
     }
 
@@ -59,11 +59,18 @@ export const VoiceRecorderListScreen = ({ navigation }) => {
             ItemSeparatorComponent={Divider}
         />);
 
+    const onAddNew = () => {
+        navigation.navigate('Create');
+    }
+
 
     return (
         <Layout style={{ flex: 1 }}>
             <SafeAreaView style={{ flex: 1 }}>
-                <Text category='h1'>List</Text>
+                <Layout style={{ flexDirection: 'row' }}>
+                    <Text category='h1' style={{ marginRight: 20 }}>List</Text>
+                    <Button onPress={onAddNew} >Add New</Button>
+                </Layout>
                 <ListRecording store={audioStore} />
             </SafeAreaView>
         </Layout>
