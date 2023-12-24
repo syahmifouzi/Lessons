@@ -110,6 +110,7 @@ export const VoiceRecorderDetailsScreen = ({ navigation }) => {
                 shouldDuckAndroid: true,
                 interruptionModeAndroid: InterruptionModeAndroid.DoNotMix,
                 playThroughEarpieceAndroid: false,
+                staysActiveInBackground: true,
             });
             const sound = new Audio.Sound();
 
