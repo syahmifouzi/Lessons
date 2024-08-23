@@ -1,0 +1,135 @@
+#VRML_SIM R2023b utf8
+
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/backgrounds/protos/TexturedBackground.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/backgrounds/protos/TexturedBackgroundLight.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/floors/protos/RectangleArena.proto"
+EXTERNPROTO "https://raw.githubusercontent.com/cyberbotics/webots/R2023b/projects/objects/solids/protos/SolidBox.proto"
+
+WorldInfo {
+}
+Viewpoint {
+  orientation -0.09594418310835875 0.9124182047193198 0.3978539096508205 0.5168170216611153
+  position -0.883462717547683 -0.3085390412323188 0.64600761791798
+}
+TexturedBackground {
+}
+TexturedBackgroundLight {
+}
+RectangleArena {
+  floorSize 10 10
+}
+DEF target_box SolidBox {
+  translation 0.08 0 0.47
+  size 0.1 0.1 0.1
+}
+Solid {
+  translation 0 -0.22 0.17
+  children [
+    Shape {
+      appearance PBRAppearance {
+        metalness 0
+      }
+      geometry Sphere {
+        radius 0.025
+      }
+    }
+  ]
+}
+Robot {
+  translation -8.754986264280665e-18 6.349351057139725e-19 0.049607552087823345
+  children [
+    HingeJoint {
+      jointParameters HingeJointParameters {
+        anchor 0.06 0 0
+      }
+      device [
+        RotationalMotor {
+          name "arm_rm_1"
+        }
+      ]
+      endPoint Solid {
+        translation 0.0625 0 0
+        rotation 0 1 0 1.57
+        children [
+          Solid {
+            translation -0.08 0 0.0375
+            children [
+              HingeJoint {
+                jointParameters HingeJointParameters {
+                  axis 0 1 0
+                  anchor -0.075 -0.0375 0
+                }
+                device [
+                  RotationalMotor {
+                    name "arm_rm_2"
+                  }
+                ]
+                endPoint Solid {
+                  translation -0.07500000000000001 -0.0375 0
+                  rotation 1 0 0 1.57
+                  children [
+                    Solid {
+                      translation -0.08 0 0.0375
+                      children [
+                        Shape {
+                          appearance PBRAppearance {
+                            baseColor 0.8 0.5 0.8
+                            metalness 0
+                          }
+                          geometry Box {
+                            size 0.2 0.05 0.05
+                          }
+                        }
+                      ]
+                    }
+                    Shape {
+                      appearance PBRAppearance {
+                        baseColor 0.8 0.7 0.6
+                        metalness 0
+                      }
+                      geometry Cylinder {
+                        height 0.025
+                        radius 0.01
+                      }
+                    }
+                  ]
+                }
+              }
+              Shape {
+                appearance PBRAppearance {
+                  baseColor 0.8 0.5 0.8
+                  metalness 0
+                }
+                geometry Box {
+                  size 0.2 0.05 0.05
+                }
+              }
+            ]
+          }
+          Shape {
+            appearance PBRAppearance {
+              baseColor 0.8 0.7 0.6
+              metalness 0
+            }
+            geometry Cylinder {
+              height 0.025
+              radius 0.01
+            }
+          }
+        ]
+      }
+    }
+    DEF base_arm Shape {
+      appearance PBRAppearance {
+      }
+      geometry Box {
+        size 0.1 0.1 0.1
+      }
+    }
+  ]
+  boundingObject USE base_arm
+  physics Physics {
+  }
+  controller "arm_robot"
+  supervisor TRUE
+}
