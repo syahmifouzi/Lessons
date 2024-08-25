@@ -8,19 +8,39 @@ class RecordingButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Consumer<RecordingButtonStore>(builder: (context, cart, child) {
-      switch (cart.buttonState) {
-        case RecordingButtonState.stopped:
-          return StartRecordButton();
-        default:
-          return StopRecordButton();
-      }
-    });
+    return Column(
+      children: [
+        Consumer<RecordingButtonStore>(builder: (context, cart, child) {
+          switch (cart.buttonState) {
+            case RecordingButtonState.initial:
+              return const Text("Start New Recording");
+            case RecordingButtonState.recording:
+              return const Text("Now Recording");
+            case RecordingButtonState.pausing:
+              return const Text("Paused");
+            default:
+              return const Text("Saving");
+          }
+        }),
+        Consumer<RecordingButtonStore>(builder: (context, cart, child) {
+          switch (cart.buttonState) {
+            case RecordingButtonState.initial:
+              return const ButtonInInitialState();
+            case RecordingButtonState.recording:
+              return const ButtonInRecordingState();
+            case RecordingButtonState.pausing:
+              return const ButtonInPausingState();
+            default:
+              return const StopRecordButton();
+          }
+        }),
+      ],
+    );
   }
 }
 
-class StartRecordButton extends StatelessWidget {
-  const StartRecordButton({super.key});
+class ButtonInInitialState extends StatelessWidget {
+  const ButtonInInitialState({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -35,23 +55,39 @@ class StartRecordButton extends StatelessWidget {
   }
 }
 
-class PauseRecordButton extends StatelessWidget {
-  const PauseRecordButton({super.key});
+class ButtonInRecordingState extends StatelessWidget {
+  const ButtonInRecordingState({super.key});
 
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
-        onPressed: () {}, child: const Text("Pause Recording"));
+        onPressed: () =>
+            Provider.of<RecordingButtonStore>(context, listen: false)
+                .setButtonState(RecordingButtonState.pausing),
+        child: const Text("Pause Recording"));
   }
 }
 
-class ResumeRecordButton extends StatelessWidget {
-  const ResumeRecordButton({super.key});
+class ButtonInPausingState extends StatelessWidget {
+  const ButtonInPausingState({super.key});
 
   @override
   Widget build(BuildContext context) {
-    return ElevatedButton(
-        onPressed: () {}, child: const Text("Resume Recording"));
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.spaceAround,
+      children: [
+        ElevatedButton(
+            onPressed: () =>
+                Provider.of<RecordingButtonStore>(context, listen: false)
+                    .setButtonState(RecordingButtonState.recording),
+            child: const Text("Resume Recording")),
+        ElevatedButton(
+            onPressed: () =>
+                Provider.of<RecordingButtonStore>(context, listen: false)
+                    .setButtonState(RecordingButtonState.stopped),
+            child: const Text("Stop Recording")),
+      ],
+    );
   }
 }
 

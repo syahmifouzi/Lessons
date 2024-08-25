@@ -19,8 +19,8 @@ class _MainNavigationState extends State<MainNavigation> {
         child: Scaffold(
           appBar: AppBar(
             bottom: const TabBar(tabs: [
-              Tab(icon: Icon(Icons.directions_car)),
-              Tab(icon: Icon(Icons.directions_transit)),
+              Tab(icon: Icon(Icons.list_rounded)),
+              Tab(icon: Icon(Icons.voice_chat)),
               Tab(icon: Icon(Icons.bug_report)),
             ]),
           ),

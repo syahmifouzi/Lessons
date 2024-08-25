@@ -11,7 +11,7 @@ class VoiceRecording extends StatefulWidget {
 class _VoiceRecordingState extends State<VoiceRecording> {
   @override
   Widget build(BuildContext context) {
-    return Center(
+    return const Center(
       child: Column(children: [RecordingButton()]),
     );
   }

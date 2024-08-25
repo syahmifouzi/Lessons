@@ -7,6 +7,7 @@ plugins {
 
 android {
     namespace = "com.example.flutter_quran"
+    // compileSdk = 33 // Error, cannot use 33, need to use 34 or something...
     compileSdk = flutter.compileSdkVersion
     ndkVersion = flutter.ndkVersion
 
@@ -24,7 +25,8 @@ android {
         applicationId = "com.example.flutter_quran"
         // You can update the following values to match your application needs.
         // For more information, see: https://flutter.dev/to/review-gradle-config.
-        minSdk = flutter.minSdkVersion
+        minSdk = 23
+        // minSdk = flutter.minSdkVersion
         targetSdk = flutter.targetSdkVersion
         versionCode = flutter.versionCode
         versionName = flutter.versionName
