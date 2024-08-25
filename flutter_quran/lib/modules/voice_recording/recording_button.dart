@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_quran/modules/voice_recording/recording_button_store.dart';
 import 'package:flutter_quran/modules/debug_print/debug_print_store.dart';
 import 'package:flutter_quran/modules/voice_recording/stopwatch_store.dart';
+import 'package:flutter_quran/modules/voice_recording/voice_recording_store.dart';
 import 'package:provider/provider.dart';
 
 class RecordingButton extends StatelessWidget {
@@ -31,9 +32,13 @@ class ButtonInInitialState extends StatelessWidget {
   Widget build(BuildContext context) {
     return ElevatedButton(
         onPressed: () {
-          Provider.of<RecordingButtonStore>(context, listen: false)
-              .setButtonState(RecordingButtonState.recording);
-          Provider.of<StopwatchStore>(context, listen: false).start();
+          // Provider.of<RecordingButtonStore>(context, listen: false)
+          //     .setButtonState(RecordingButtonState.recording);
+          // Provider.of<StopwatchStore>(context, listen: false).start();
+
+          // Provider.of<VoiceRecordingStore>(context, listen: false).start();
+          // Provider.of<VoiceRecordingStore>(context, listen: false).listFiles();
+          Provider.of<VoiceRecordingStore>(context, listen: false).playAudio();
         },
         child: const Text("Start Recording"));
   }
@@ -50,6 +55,8 @@ class ButtonInRecordingState extends StatelessWidget {
               .setButtonState(RecordingButtonState.pausing);
 
           Provider.of<StopwatchStore>(context, listen: false).stop();
+
+          Provider.of<VoiceRecordingStore>(context, listen: false).stop();
         },
         child: const Text("Pause Recording"));
   }
