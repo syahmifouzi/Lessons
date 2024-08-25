@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_quran/modules/voice_recording/recording_button_store.dart';
 import 'package:flutter_quran/modules/debug_print/debug_print_store.dart';
+import 'package:flutter_quran/modules/voice_recording/stopwatch_store.dart';
 import 'package:provider/provider.dart';
 
 class RecordingButton extends StatelessWidget {
@@ -8,34 +9,18 @@ class RecordingButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Consumer<RecordingButtonStore>(builder: (context, cart, child) {
-          switch (cart.buttonState) {
-            case RecordingButtonState.initial:
-              return const Text("Start New Recording");
-            case RecordingButtonState.recording:
-              return const Text("Now Recording");
-            case RecordingButtonState.pausing:
-              return const Text("Paused");
-            default:
-              return const Text("Saving");
-          }
-        }),
-        Consumer<RecordingButtonStore>(builder: (context, cart, child) {
-          switch (cart.buttonState) {
-            case RecordingButtonState.initial:
-              return const ButtonInInitialState();
-            case RecordingButtonState.recording:
-              return const ButtonInRecordingState();
-            case RecordingButtonState.pausing:
-              return const ButtonInPausingState();
-            default:
-              return const StopRecordButton();
-          }
-        }),
-      ],
-    );
+    return Consumer<RecordingButtonStore>(builder: (context, cart, child) {
+      switch (cart.buttonState) {
+        case RecordingButtonState.initial:
+          return const ButtonInInitialState();
+        case RecordingButtonState.recording:
+          return const ButtonInRecordingState();
+        case RecordingButtonState.pausing:
+          return const ButtonInPausingState();
+        default:
+          return const StopRecordButton();
+      }
+    });
   }
 }
 
@@ -48,8 +33,7 @@ class ButtonInInitialState extends StatelessWidget {
         onPressed: () {
           Provider.of<RecordingButtonStore>(context, listen: false)
               .setButtonState(RecordingButtonState.recording);
-          Provider.of<DebugPrintStore>(context, listen: false).print(
-              "recording_button.dart: StartRecordButton: Started Recording");
+          Provider.of<StopwatchStore>(context, listen: false).start();
         },
         child: const Text("Start Recording"));
   }
@@ -61,9 +45,12 @@ class ButtonInRecordingState extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
-        onPressed: () =>
-            Provider.of<RecordingButtonStore>(context, listen: false)
-                .setButtonState(RecordingButtonState.pausing),
+        onPressed: () {
+          Provider.of<RecordingButtonStore>(context, listen: false)
+              .setButtonState(RecordingButtonState.pausing);
+
+          Provider.of<StopwatchStore>(context, listen: false).stop();
+        },
         child: const Text("Pause Recording"));
   }
 }
@@ -77,14 +64,20 @@ class ButtonInPausingState extends StatelessWidget {
       mainAxisAlignment: MainAxisAlignment.spaceAround,
       children: [
         ElevatedButton(
-            onPressed: () =>
-                Provider.of<RecordingButtonStore>(context, listen: false)
-                    .setButtonState(RecordingButtonState.recording),
+            onPressed: () {
+              Provider.of<RecordingButtonStore>(context, listen: false)
+                  .setButtonState(RecordingButtonState.recording);
+
+              Provider.of<StopwatchStore>(context, listen: false).start();
+            },
             child: const Text("Resume Recording")),
         ElevatedButton(
-            onPressed: () =>
-                Provider.of<RecordingButtonStore>(context, listen: false)
-                    .setButtonState(RecordingButtonState.stopped),
+            onPressed: () {
+              Provider.of<RecordingButtonStore>(context, listen: false)
+                  .setButtonState(RecordingButtonState.initial);
+
+              Provider.of<StopwatchStore>(context, listen: false).reset();
+            },
             child: const Text("Stop Recording")),
       ],
     );
