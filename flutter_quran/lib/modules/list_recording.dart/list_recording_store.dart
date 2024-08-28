@@ -2,14 +2,8 @@ import 'dart:io';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_quran/modules/audio_player/audio_player_store.dart';
 import 'package:path_provider/path_provider.dart';
-
-class RecordingFile {
-  String name;
-  String path;
-
-  RecordingFile({required this.name, required this.path});
-}
 
 class ListRecordingStore extends ChangeNotifier {
   List<RecordingFile> recordingFileList = [];

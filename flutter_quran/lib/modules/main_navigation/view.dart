@@ -1,7 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_quran/modules/debug_print/debug_print.dart';
 import 'package:flutter_quran/modules/list_recording.dart/list_recording.dart';
-import 'package:flutter_quran/modules/tutorial_page/view.dart';
 import 'package:flutter_quran/modules/voice_recording/view.dart';
 
 class MainNavigation extends StatefulWidget {
