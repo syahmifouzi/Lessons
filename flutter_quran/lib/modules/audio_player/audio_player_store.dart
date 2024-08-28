@@ -25,14 +25,20 @@ class AudioPlayerStore extends ChangeNotifier {
     notifyListeners();
   }
 
-  Future<void> getDuration() async {
+  Future<int> getDuration() async {
     final player = AudioPlayer();
     await player.setSource(DeviceFileSource(recordingFile.path));
-    recordingFile.duration = await player.getDuration();
+    final duration = await player.getDuration();
+    return 1;
+    if (duration == null) {
+      return 1;
+    }
+    recordingFile.duration = duration;
     notifyListeners();
     print(recordingFile.duration);
     // await player.getDuration();
     // await player.play();
     // await player.stop();
+    return 0;
   }
 }

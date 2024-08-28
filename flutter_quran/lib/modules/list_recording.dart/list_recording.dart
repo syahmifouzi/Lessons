@@ -7,6 +7,22 @@ import 'package:provider/provider.dart';
 class ListRecording extends StatelessWidget {
   const ListRecording({super.key});
 
+  Future<void> _showDialog(context) async {
+    return showDialog(
+        context: context,
+        barrierDismissible: true,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text("Title"),
+            actions: [
+              TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text("OK"))
+            ],
+          );
+        });
+  }
+
   @override
   Widget build(BuildContext context) {
     Provider.of<ListRecordingStore>(context, listen: false)
@@ -18,11 +34,15 @@ class ListRecording extends StatelessWidget {
           itemBuilder: (context, index) {
             return ListTile(
                 title: Text(recordingFileList[index].name),
-                onTap: () {
+                onTap: () async {
                   Provider.of<AudioPlayerStore>(context, listen: false)
                       .setRecordingFile(recordingFileList[index]);
-                  Provider.of<AudioPlayerStore>(context, listen: false)
+                  final errorCode = await Provider.of<AudioPlayerStore>(context,
+                          listen: false)
                       .getDuration();
+                  if (errorCode == 1) {
+                    return _showDialog(context);
+                  }
                   Navigator.push(
                       context,
                       MaterialPageRoute(
