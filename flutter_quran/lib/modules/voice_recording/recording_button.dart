@@ -32,13 +32,13 @@ class ButtonInInitialState extends StatelessWidget {
   Widget build(BuildContext context) {
     return ElevatedButton(
         onPressed: () {
-          // Provider.of<RecordingButtonStore>(context, listen: false)
-          //     .setButtonState(RecordingButtonState.recording);
-          // Provider.of<StopwatchStore>(context, listen: false).start();
+          Provider.of<RecordingButtonStore>(context, listen: false)
+              .setButtonState(RecordingButtonState.recording);
+          Provider.of<StopwatchStore>(context, listen: false).start();
 
-          // Provider.of<VoiceRecordingStore>(context, listen: false).start();
+          Provider.of<VoiceRecordingStore>(context, listen: false).start();
           // Provider.of<VoiceRecordingStore>(context, listen: false).listFiles();
-          Provider.of<VoiceRecordingStore>(context, listen: false).playAudio();
+          // Provider.of<VoiceRecordingStore>(context, listen: false).playAudio();
         },
         child: const Text("Start Recording"));
   }
@@ -56,7 +56,7 @@ class ButtonInRecordingState extends StatelessWidget {
 
           Provider.of<StopwatchStore>(context, listen: false).stop();
 
-          Provider.of<VoiceRecordingStore>(context, listen: false).stop();
+          Provider.of<VoiceRecordingStore>(context, listen: false).pause();
         },
         child: const Text("Pause Recording"));
   }
@@ -76,6 +76,8 @@ class ButtonInPausingState extends StatelessWidget {
                   .setButtonState(RecordingButtonState.recording);
 
               Provider.of<StopwatchStore>(context, listen: false).start();
+
+              Provider.of<VoiceRecordingStore>(context, listen: false).resume();
             },
             child: const Text("Resume Recording")),
         ElevatedButton(
@@ -84,6 +86,8 @@ class ButtonInPausingState extends StatelessWidget {
                   .setButtonState(RecordingButtonState.initial);
 
               Provider.of<StopwatchStore>(context, listen: false).reset();
+
+              Provider.of<VoiceRecordingStore>(context, listen: false).stop();
             },
             child: const Text("Stop Recording")),
       ],
