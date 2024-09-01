@@ -1,8 +1,8 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_sound/flutter_sound.dart';
 import 'package:path_provider/path_provider.dart';
 
 enum AudioPlayerButtonState { initial, playing, pausing, stopped }
@@ -27,10 +27,19 @@ class AudioPlayerStore extends ChangeNotifier {
   AudioPlayerButtonState _buttonState = AudioPlayerButtonState.initial;
   final List<RecordingFile> _recordingFileList = [];
   int _recordingFileIndex = -1;
-  AudioPlayer player = AudioPlayer();
+  FlutterSoundPlayer player = FlutterSoundPlayer();
   Duration _currentPlaybackPosition = const Duration();
   AudioSlider audioSlider = AudioSlider();
   RecordingFile _recordingFileSelected = RecordingFile(name: "", path: "");
+  // PlayerState _lastPlayerState
+
+  AudioPlayerStore() {
+    _initialize();
+  }
+
+  void _initialize() async {
+    await player.openPlayer();
+  }
 
   RecordingFile get recordingFileSelected => _recordingFileSelected;
 
@@ -82,17 +91,17 @@ class AudioPlayerStore extends ChangeNotifier {
       return Future.error("No file selected.");
     }
     final recordingFileSelectedTemp = recordingFileList[recordingFileIndex];
-    await player.setSource(DeviceFileSource(recordingFileSelectedTemp.path));
-    final duration = await player.getDuration();
-    if (duration == null) {
-      return Future.error("File has no duration.");
-    }
-    recordingFileSelectedTemp.duration = duration;
-    // recordingFileList[recordingFileIndex].duration =
-    //     recordingFileSelected.duration;
-    sliderMax = duration.inSeconds.toDouble();
+    // await player.setSource(DeviceFileSource(recordingFileSelectedTemp.path));
+    // final duration = await player.getDuration();
+    // if (duration == null) {
+    //   return Future.error("File has no duration.");
+    // }
+    // recordingFileSelectedTemp.duration = duration;
+    // sliderMax = duration.inSeconds.toDouble();
+    // Bypass calling setState during build error
+    await Future.delayed(Duration.zero);
     recordingFileSelected = recordingFileSelectedTemp;
-    updateCurrentFile(recordingFileSelected.duration);
+    // updateCurrentFile(recordingFileSelected.duration);
   }
 
   AudioPlayerButtonState get buttonState => _buttonState;
@@ -116,19 +125,29 @@ class AudioPlayerStore extends ChangeNotifier {
 
   Duration get currentPlaybackPosition => _currentPlaybackPosition;
 
-  void play() async {
+  void _whenFinished() {
+    buttonState = AudioPlayerButtonState.initial;
+  }
+
+  Future<void> play() async {
     final file = recordingFileSelected;
-    await player.play(DeviceFileSource(file.path));
+    final duration = await player.startPlayer(
+        fromURI: file.path, codec: Codec.aacMP4, whenFinished: _whenFinished);
+    if (duration == null) {
+      return Future.error("File has no duration.");
+    }
+    sliderMax = duration.inSeconds.toDouble();
+    updateCurrentFile(duration);
     buttonState = AudioPlayerButtonState.playing;
   }
 
   void pause() async {
-    await player.pause();
+    await player.pausePlayer();
     buttonState = AudioPlayerButtonState.pausing;
   }
 
   void resume() async {
-    await player.resume();
+    await player.resumePlayer();
     buttonState = AudioPlayerButtonState.playing;
   }
 
@@ -137,7 +156,7 @@ class AudioPlayerStore extends ChangeNotifier {
         recordingFileIndex > _recordingFileList.length - 1) {
       return Future.error("No file selected.");
     }
-    if (player.state != PlayerState.stopped) {
+    if (player.playerState != PlayerState.isStopped) {
       await stop();
     }
     final file = File(recordingFileSelected.path);
@@ -153,9 +172,9 @@ class AudioPlayerStore extends ChangeNotifier {
   }
 
   Future<void> stop() async {
-    await player.stop();
-    await player.seek(const Duration());
-    await player.release();
+    await player.stopPlayer();
+    await player.seekToPlayer(const Duration());
+    // await player.release();
 
     // function with notifyListener() must be called last inside any function
     // await must be called to prevent setState() during build
@@ -163,12 +182,19 @@ class AudioPlayerStore extends ChangeNotifier {
     sliderValue = 0;
   }
 
-  Stream<Duration> get onPositionChanged {
-    return player.onPositionChanged;
+  Stream<PlaybackDisposition> get onPositionChanged async* {
+    // TODO: check if the player is playing to handle this null value
+    await player.setSubscriptionDuration(Durations.medium1);
+    yield* player.onProgress!;
   }
 
-  Stream<PlayerState> get onPlayerStateChanged {
-    return player.onPlayerStateChanged;
+  Stream<PlayerState> get onPlayerStateChanged async* {
+    Duration interval = Durations.medium1;
+    Stream<PlayerState> stream = Stream.periodic(interval, (x) {
+      PlayerState playerState = player.playerState;
+      return playerState;
+    });
+    yield* stream;
   }
 
   double get sliderMin {
@@ -194,7 +220,7 @@ class AudioPlayerStore extends ChangeNotifier {
   }
 
   void sliderOnChanged(double value) async {
-    await player.seek(Duration(seconds: value.toInt()));
+    await player.seekToPlayer(Duration(seconds: value.toInt()));
     sliderValue = value;
   }
 

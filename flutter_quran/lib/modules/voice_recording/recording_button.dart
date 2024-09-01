@@ -28,15 +28,39 @@ class RecordingButton extends StatelessWidget {
 class ButtonInInitialState extends StatelessWidget {
   const ButtonInInitialState({super.key});
 
+  Future<void> _showErrorDialog(context, String error) async {
+    return showDialog(
+        context: context,
+        barrierDismissible: true,
+        builder: (context) {
+          return AlertDialog(
+            title: const Text("Error"),
+            content: Text(error),
+            actions: [
+              TextButton(
+                  onPressed: () => Navigator.of(context).pop(),
+                  child: const Text("OK"))
+            ],
+          );
+        });
+  }
+
   @override
   Widget build(BuildContext context) {
     return ElevatedButton(
-        onPressed: () {
+        onPressed: () async {
           Provider.of<RecordingButtonStore>(context, listen: false)
               .setButtonState(RecordingButtonState.recording);
           Provider.of<StopwatchStore>(context, listen: false).start();
 
-          Provider.of<VoiceRecordingStore>(context, listen: false).start();
+          try {
+            await Provider.of<VoiceRecordingStore>(context, listen: false)
+                .start();
+          } catch (e) {
+            if (context.mounted) {
+              _showErrorDialog(context, e.toString());
+            }
+          }
           // Provider.of<VoiceRecordingStore>(context, listen: false).listFiles();
           // Provider.of<VoiceRecordingStore>(context, listen: false).playAudio();
         },

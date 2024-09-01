@@ -1,6 +1,6 @@
-import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_quran/modules/audio_player/audio_player_store.dart';
+import 'package:flutter_sound/flutter_sound.dart';
 import 'package:provider/provider.dart';
 
 class AudioPlayerView extends StatelessWidget {
@@ -29,13 +29,17 @@ class AudioPlayerView extends StatelessWidget {
   }
 
   Widget _playerPositionChangedHandler(
-      {required Stream<Duration> streamDuration, required String duration}) {
+      {required Stream<PlaybackDisposition> streamDuration,
+      required String duration}) {
     return StreamBuilder(
         stream: streamDuration,
         builder: (context, snapshot) {
           if (snapshot.hasData) {
-            String currentPosition =
-                snapshot.data.toString().split('.').first.padLeft(8, "0");
+            String currentPosition = snapshot.data!.position
+                .toString()
+                .split('.')
+                .first
+                .padLeft(8, "0");
             return Text("$currentPosition/$duration");
           }
           return Text("00:00:00/$duration");
@@ -44,7 +48,7 @@ class AudioPlayerView extends StatelessWidget {
 
   Widget _playerStateHandler({
     required Stream<PlayerState> streamState,
-    required Stream<Duration> streamDuration,
+    required Stream<PlaybackDisposition> streamDuration,
     required String duration,
   }) {
     return StreamBuilder(
@@ -52,14 +56,14 @@ class AudioPlayerView extends StatelessWidget {
         builder: (context, snapshot) {
           if (snapshot.hasData) {
             switch (snapshot.data) {
-              case PlayerState.stopped:
+              case PlayerState.isStopped:
                 return Text("00:00:00/$duration");
-              case PlayerState.completed:
-                return FutureBuilder(
-                    future: _delayedStopCall(context),
-                    builder: (context, snapshot) {
-                      return Text("00:00:00/$duration");
-                    });
+              // case PlayerState.completed:
+              //   return FutureBuilder(
+              //       future: _delayedStopCall(context),
+              //       builder: (context, snapshot) {
+              //         return Text("00:00:00/$duration");
+              //       });
               default:
                 return _playerPositionChangedHandler(
                     streamDuration: streamDuration, duration: duration);
@@ -70,7 +74,7 @@ class AudioPlayerView extends StatelessWidget {
   }
 
   Widget _audioSliderHandler({
-    required Stream<Duration> streamDuration,
+    required Stream<PlaybackDisposition> streamDuration,
     required double max,
     required void Function(double) onChanged,
     required void Function(double) onChangeStart,
@@ -85,7 +89,8 @@ class AudioPlayerView extends StatelessWidget {
             stream: streamDuration,
             builder: (context, snapshot) {
               if (snapshot.hasData) {
-                double currentPosition = snapshot.data!.inSeconds.toDouble();
+                double currentPosition =
+                    snapshot.data!.position.inSeconds.toDouble();
                 return Slider(
                   value: currentPosition,
                   onChanged: onChanged,

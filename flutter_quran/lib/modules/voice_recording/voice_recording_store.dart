@@ -1,10 +1,20 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_sound/flutter_sound.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
-import 'package:record/record.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class VoiceRecordingStore extends ChangeNotifier {
-  final record = AudioRecorder();
+  final record = FlutterSoundRecorder();
+
+// Declare Constructor
+  VoiceRecordingStore() {
+    _initialize();
+  }
+
+  void _initialize() async {
+    await record.openRecorder();
+  }
 
   Future<String> get _localPath async {
     final directory = await getApplicationDocumentsDirectory();
@@ -26,30 +36,35 @@ class VoiceRecordingStore extends ChangeNotifier {
   //   print(permissionsGranted);
   // }
 
-  void start() async {
+  Future<void> start() async {
     // Check and request permission if needed
-    if (await record.hasPermission()) {
+    if (await Permission.microphone.isGranted) {
+      // await record.openRecorder();
       final path = await _localPath;
       DateTime now = DateTime.now();
       String formattedDate = DateFormat('yyMMdd_HHmmss').format(now);
       // Start recording to file
-      await record.start(const RecordConfig(),
-          path: '$path/$formattedDate.m4a');
+      await record.startRecorder(
+          toFile: '$path/$formattedDate.m4a', codec: Codec.aacMP4);
+      // If codec not supported, this line above will stuck
+    } else {
+      return Future.error("Permission not granted!");
     }
   }
 
   void pause() async {
-    await record.pause();
+    await record.pauseRecorder();
   }
 
   void resume() async {
-    await record.resume();
+    await record.resumeRecorder();
   }
 
   void stop() async {
     // Stop recording...
     // final path = await record.stop();
-    await record.stop();
+    await record.stopRecorder();
+    // await record.closeRecorder();
     // record.dispose(); // As always, don't forget this one.
   }
 }
