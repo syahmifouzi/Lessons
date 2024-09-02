@@ -18,6 +18,7 @@ class _MainNavigationState extends State<MainNavigation> {
         length: 3,
         child: Scaffold(
           appBar: AppBar(
+            backgroundColor: Colors.blueGrey[400],
             bottom: const TabBar(tabs: [
               Tab(icon: Icon(Icons.list_rounded)),
               Tab(icon: Icon(Icons.voice_chat)),

@@ -3,6 +3,7 @@ import 'package:flutter_sound/flutter_sound.dart';
 import 'package:intl/intl.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:permission_handler/permission_handler.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
 
 class VoiceRecordingStore extends ChangeNotifier {
   final record = FlutterSoundRecorder();
@@ -38,11 +39,13 @@ class VoiceRecordingStore extends ChangeNotifier {
 
   Future<void> start() async {
     // Check and request permission if needed
-    if (await Permission.microphone.isGranted) {
+    if (await Permission.microphone.request().isGranted) {
       // await record.openRecorder();
       final path = await _localPath;
       DateTime now = DateTime.now();
       String formattedDate = DateFormat('yyMMdd_HHmmss').format(now);
+      // Enable Wakelock
+      await WakelockPlus.enable();
       // Start recording to file
       await record.startRecorder(
           toFile: '$path/$formattedDate.m4a', codec: Codec.aacMP4);
@@ -64,6 +67,8 @@ class VoiceRecordingStore extends ChangeNotifier {
     // Stop recording...
     // final path = await record.stop();
     await record.stopRecorder();
+    // Disable Wakelock
+    await WakelockPlus.disable();
     // await record.closeRecorder();
     // record.dispose(); // As always, don't forget this one.
   }

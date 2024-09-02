@@ -14,28 +14,36 @@ class VoiceRecording extends StatefulWidget {
 class _VoiceRecordingState extends State<VoiceRecording> {
   @override
   Widget build(BuildContext context) {
-    return Center(
-      child: Column(children: [
-        Consumer<StopwatchStore>(builder: (context, cart, child) {
-          return Text(
-            cart.timeNow(),
-            style: const TextStyle(fontSize: 48, fontWeight: FontWeight.bold),
-          );
-        }),
-        Consumer<RecordingButtonStore>(builder: (context, cart, child) {
-          switch (cart.buttonState) {
-            case RecordingButtonState.initial:
-              return const Text("Start New Recording");
-            case RecordingButtonState.recording:
-              return const Text("Now Recording");
-            case RecordingButtonState.pausing:
-              return const Text("Paused");
-            default:
-              return const Text("Saving");
-          }
-        }),
-        const RecordingButton()
-      ]),
+    return Container(
+      color: Colors.blueGrey[900],
+      child: Center(
+        child: Column(children: [
+          Consumer<StopwatchStore>(builder: (context, cart, child) {
+            return Text(
+              cart.timeNow(),
+              style: TextStyle(
+                  fontSize: 48,
+                  fontWeight: FontWeight.bold,
+                  color: Colors.blue[50]),
+            );
+          }),
+          Consumer<RecordingButtonStore>(builder: (context, cart, child) {
+            switch (cart.buttonState) {
+              case RecordingButtonState.initial:
+                return Text("Start New Recording",
+                    style: TextStyle(color: Colors.blue[50]));
+              case RecordingButtonState.recording:
+                return Text("Now Recording",
+                    style: TextStyle(color: Colors.blue[50]));
+              case RecordingButtonState.pausing:
+                return Text("Paused", style: TextStyle(color: Colors.blue[50]));
+              default:
+                return Text("Saving", style: TextStyle(color: Colors.blue[50]));
+            }
+          }),
+          const RecordingButton()
+        ]),
+      ),
     );
   }
 }
